@@ -1,4 +1,4 @@
-package com.sharkdtu.mlwheel.util
+package com.sharkdtu.mlwheel
 
 import org.apache.log4j.{LogManager, PropertyConfigurator}
 import org.slf4j.impl.StaticLoggerBinder
@@ -9,7 +9,7 @@ import org.slf4j.{Logger, LoggerFactory}
  * logging messages at different levels using methods that only evaluate parameters lazily if the
  * log level is enabled.
  */
-private[spark] trait Logging {
+private[mlwheel] trait Logging {
 
   // Make the log field transient so that objects with Logging can
   // be serialized and used on another machine

@@ -5,18 +5,15 @@
   <groupId>com.sharkdtu.mlwheel</groupId>
   <artifactId>mlwheel_2.11</artifactId>
   <version>0.1-SNAPSHOT</version>
-  <name>A Parameter Server for Machine Learning</name>
+  <name>MLWheel(A BSP PS)</name>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <java.version>1.8</java.version>
+    <java.version>1.7</java.version>
     <scala.version>2.11.8</scala.version>
     <scala.binary.version>2.11</scala.binary.version>
     <akka.version>2.5.0</akka.version>
-    <PermGen>64m</PermGen>
-    <MaxPermGen>512m</MaxPermGen>
-    <CodeCacheSize>512m</CodeCacheSize>
   </properties>
 
   <repositories>
