@@ -101,9 +101,13 @@ private[mlwheel] trait Logging {
         Option(getClass.getClassLoader.getResource(defaultLogProps)) match {
           case Some(url) =>
             PropertyConfigurator.configure(url)
+            // scalastyle:off println
             System.err.println(s"Using MLWheel's default log4j profile: $defaultLogProps")
+            // scalastyle:on println
           case None =>
+            // scalastyle:off println
             System.err.println(s"MLWheel was unable to load $defaultLogProps")
+          // scalastyle:on println
         }
       }
     }
@@ -119,10 +123,13 @@ private object Logging {
   @volatile private var initialized = false
   val initLock = new Object()
   try {
+    // scalastyle:off classforname
     // We use reflection here to handle the case where users remove the
     // slf4j-to-jul bridge order to route their logs to JUL.
     val bridgeClass = Class.forName("org.slf4j.bridge.SLF4JBridgeHandler", true,
       Option(Thread.currentThread().getContextClassLoader).getOrElse(getClass.getClassLoader))
+    // scalastyle:on classforname
+
     bridgeClass.getMethod("removeHandlersForRootLogger").invoke(null)
     val installed = bridgeClass.getMethod("isInstalled").invoke(null).asInstanceOf[Boolean]
     if (!installed) {

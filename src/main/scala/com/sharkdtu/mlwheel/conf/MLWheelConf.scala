@@ -1,7 +1,5 @@
 package com.sharkdtu.mlwheel.conf
 
-import java.util.concurrent.ConcurrentHashMap
-
 import com.sharkdtu.mlwheel.Logging
 
 /**

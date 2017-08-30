@@ -2,7 +2,7 @@ package com.sharkdtu.mlwheel.conf
 
 import java.util.concurrent.TimeUnit
 
-import com.sharkdtu.mlwheel.util.TimeUtils
+import com.sharkdtu.mlwheel.util.{ByteUnit, ByteUtils, TimeUtils}
 
 private object ConfigHelpers {
 
@@ -35,6 +35,18 @@ private object ConfigHelpers {
   def timeFromString(str: String, unit: TimeUnit): Long = TimeUtils.timeStringAs(str, unit)
 
   def timeToString(v: Long, unit: TimeUnit): String = TimeUnit.MILLISECONDS.convert(v, unit) + "ms"
+
+  def byteFromString(str: String, unit: ByteUnit): Long = {
+    val (input, multiplier) =
+      if (str.length() > 0 && str.charAt(0) == '-') {
+        (str.substring(1), -1)
+      } else {
+        (str, 1)
+      }
+    multiplier * ByteUtils.byteStringAs(input, unit)
+  }
+
+  def byteToString(v: Long, unit: ByteUnit): String = unit.convertTo(v, ByteUnit.BYTE) + "Byte"
 
 }
 

@@ -14,8 +14,12 @@
     <scala.version>2.11.8</scala.version>
     <scala.binary.version>2.11</scala.binary.version>
     <akka.version>2.5.0</akka.version>
+    <PermGen>512m</PermGen>
+    <MaxPermGen>512m</MaxPermGen>
+    <CodeCacheSize>1024m</CodeCacheSize>
   </properties>
 
+  <!--
   <repositories>
     <repository>
       <id>softprops-maven</id>
@@ -29,6 +33,7 @@
       </snapshots>
     </repository>
   </repositories>
+  -->
   
   <dependencies>
     <dependency>
@@ -249,6 +254,99 @@
               <includeScope>runtime</includeScope>
               <outputDirectory>${project.build.directory}/lib</outputDirectory>
             </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>2.17</version>
+        <configuration>
+          <failOnViolation>false</failOnViolation>
+          <includeTestSourceDirectory>true</includeTestSourceDirectory>
+          <sourceDirectories>
+            <dir>${basedir}/src/main/java</dir>
+            <dir>${basedir}/src/main/scala</dir>
+          </sourceDirectories>
+          <testSourceDirectory>${basedir}/src/test/java</testSourceDirectory>
+          <configLocation>${basedir}/dev/javastyle-config.xml</configLocation>
+          <outputFile>${basedir}/target/javastyle-output.xml</outputFile>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.scalastyle</groupId>
+        <artifactId>scalastyle-maven-plugin</artifactId>
+        <version>1.0.0</version>
+        <configuration>
+          <verbose>false</verbose>
+          <failOnViolation>true</failOnViolation>
+          <includeTestSourceDirectory>false</includeTestSourceDirectory>
+          <failOnWarning>false</failOnWarning>
+          <sourceDirectory>${basedir}/src/main/scala</sourceDirectory>
+          <testSourceDirectory>${basedir}/src/test/scala</testSourceDirectory>
+          <configLocation>${basedir}/dev/scalastyle-config.xml</configLocation>
+          <outputFile>${basedir}/target/scalastyle-output.xml</outputFile>
+          <inputEncoding>${project.build.sourceEncoding}</inputEncoding>
+          <outputEncoding>${project.reporting.outputEncoding}</outputEncoding>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- Surefire runs all Java tests -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.19.1</version>
+        <configuration>
+          <includes>
+            <include>**/Test*.java</include>
+            <include>**/*Test.java</include>
+            <include>**/*TestCase.java</include>
+            <include>**/*Suite.java</include>
+          </includes>
+          <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
+          <argLine>-Xmx2g -Xss4096k -XX:MaxPermSize=${MaxPermGen} -XX:ReservedCodeCacheSize=512m</argLine>
+          <failIfNoTests>false</failIfNoTests>
+        </configuration>
+        <executions>
+          <execution>
+            <id>test</id>
+            <goals>
+              <goal>test</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- Scalatest runs all Scala tests -->
+      <plugin>
+        <groupId>org.scalatest</groupId>
+        <artifactId>scalatest-maven-plugin</artifactId>
+        <version>1.0</version>
+        <configuration>
+          <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
+          <junitxml>.</junitxml>
+          <filereports>mlwheel.txt</filereports>
+          <argLine>-ea -Xmx2g -XX:MaxPermSize=${MaxPermGen} -XX:ReservedCodeCacheSize=${CodeCacheSize}</argLine>
+          <stderr/>
+        </configuration>
+        <executions>
+          <execution>
+            <id>test</id>
+            <goals>
+              <goal>test</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>
