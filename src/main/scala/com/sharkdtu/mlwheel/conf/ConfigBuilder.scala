@@ -90,14 +90,6 @@ private[mlwheel] class TypedConfigBuilder[T](
       parent, stringToSeq(_, converter), seqToString(_, stringConverter))
   }
 
-  /** Creates a [[ConfigEntry]] that does not have a default value. */
-  def createOptional: OptionalConfigEntry[T] = {
-    val entry = new OptionalConfigEntry[T](
-      parent.key, converter, stringConverter, parent._doc, parent._public)
-    parent._onCreate.foreach(_(entry))
-    entry
-  }
-
   /** Creates a [[ConfigEntry]] that has a default value. */
   def createWithDefault(default: T): ConfigEntry[T] = {
     // Treat "String" as a special case, so that both createWithDefault and createWithDefaultString
@@ -176,6 +168,10 @@ private[mlwheel] case class ConfigBuilder(key: String) {
 
   def timeConf(unit: TimeUnit): TypedConfigBuilder[Long] = {
     new TypedConfigBuilder(this, timeFromString(_, unit), timeToString(_, unit))
+  }
+
+  def byteConf(unit: ByteUnit): TypedConfigBuilder[Long] = {
+    new TypedConfigBuilder(this, byteFromString(_, unit), byteToString(_, unit))
   }
 
   def fallbackConf[T](fallback: ConfigEntry[T]): ConfigEntry[T] = {

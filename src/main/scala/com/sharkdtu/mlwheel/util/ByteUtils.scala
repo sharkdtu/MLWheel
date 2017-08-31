@@ -9,7 +9,7 @@ class ByteUnit(val multiplier: Long, val name: String) {
       val ratio = multiplier / u.multiplier
       if (Long.MaxValue / ratio < d) {
         throw new IllegalArgumentException(s"Conversion of $d exceeds Long.MAX_VALUE" +
-          s"from $name to ${u.name}. Try a larger unit (e.g. MiB instead of KiB)")
+          s"from $name to ${u.name}. Try a larger unit (e.g. MB instead of KB)")
       }
       d * ratio
     } else {
@@ -23,7 +23,7 @@ class ByteUnit(val multiplier: Long, val name: String) {
     u.convertTo(d, this)
   }
 
-  def toBytes(d: Long): Long = {
+  def toByte(d: Long): Long = {
     if (d < 0) {
       throw new IllegalArgumentException(s"Negative size value. Size must be positive: $d")
     }
@@ -44,12 +44,12 @@ object ByteUnit {
     new ByteUnit(multiplier, name)
   }
 
-  val BYTE = ByteUnit(1, "Byte")
-  val KB = ByteUnit(1024L, "KB")
-  val MB = ByteUnit(math.pow(1024L, 2L).toLong, "MB")
-  val GB = ByteUnit(math.pow(1024L, 3L).toLong, "GB")
-  val TB = ByteUnit(math.pow(1024L, 4L).toLong, "TB")
-  val PB = ByteUnit(math.pow(1024L, 5L).toLong, "PB")
+  val BYTE = ByteUnit(1L, "Byte")
+  val KB = ByteUnit(1L << 10, "KB")
+  val MB = ByteUnit(1L << 20, "MB")
+  val GB = ByteUnit(1L << 30, "GB")
+  val TB = ByteUnit(1L << 40, "TB")
+  val PB = ByteUnit(1L << 50, "PB")
 
 }
 
@@ -61,17 +61,15 @@ object ByteUtils {
     "MB" -> ByteUnit.MB,
     "GB" -> ByteUnit.GB,
     "TB" -> ByteUnit.TB,
-    "TB" -> ByteUnit.PB)
+    "PB" -> ByteUnit.PB)
 
   /**
    * Convert a passed byte string (e.g. 50b, 100kb, or 250mb) to the given. If no suffix is
    * provided, a direct conversion to the provided unit is attempted.
    */
   def byteStringAs(str: String, unit: ByteUnit): Long = {
-    val lower = str.toLowerCase.trim
-
-    val pattern = "([0-9]+)([a-z]+)?".r
-    lower match {
+    val pattern = "([0-9]+)([A-Za-z]+)?".r
+    str.trim match {
       case pattern(d, u) =>
         val value = d.toLong
         if (u != null && !byteSuffixes.contains(u)) {
@@ -83,7 +81,7 @@ object ByteUtils {
     }
   }
 
-  def byteStringAsBytes(str: String): Long = byteStringAs(str, ByteUnit.BYTE)
+  def byteStringAsByte(str: String): Long = byteStringAs(str, ByteUnit.BYTE)
 
   def byteStringAsKB(str: String): Long = byteStringAs(str, ByteUnit.KB)
 

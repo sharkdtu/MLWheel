@@ -84,27 +84,6 @@ private[mlwheel] class ConfigEntryWithDefaultString[T] (
 
 }
 
-
-/**
- * A config entry that does not have a default value.
- */
-private[mlwheel] class OptionalConfigEntry[T](
-    key: String,
-    val rawValueConverter: String => T,
-    val rawStringConverter: T => String,
-    doc: String,
-    isPublic: Boolean)
-    extends ConfigEntry[Option[T]](key, s => Some(rawValueConverter(s)),
-      v => v.map(rawStringConverter).orNull, doc, isPublic) {
-
-  override def defaultValueString: String = "<undefined>"
-
-  override def readFrom(reader: ConfigReader): Option[T] = {
-    reader.get(key).map(rawValueConverter)
-  }
-
-}
-
 /**
  * A config entry whose default value is defined by another config entry.
  */
