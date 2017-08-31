@@ -65,4 +65,25 @@ class TimeUtilsSuite extends MLWheelFunSuite {
     assert(TimeUtils.timeStringAsDay("4d") == 4L)
   }
 
+  // Test invalid strings
+  intercept[NumberFormatException] {
+    TimeUtils.timeStringAsMs("600l")
+  }
+
+  intercept[NumberFormatException] {
+    TimeUtils.timeStringAsMs("This breaks 600s")
+  }
+
+  intercept[NumberFormatException] {
+    TimeUtils.timeStringAsMs("This breaks 600ds")
+  }
+
+  intercept[NumberFormatException] {
+    TimeUtils.timeStringAsMs("600s This breaks")
+  }
+
+  intercept[NumberFormatException] {
+    TimeUtils.timeStringAsMs("This 123s breaks")
+  }
+
 }

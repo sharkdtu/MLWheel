@@ -18,7 +18,7 @@ object TimeUtils {
    */
   def timeStringAs(str: String, unit: TimeUnit): Long = {
     val lower = str.toLowerCase.trim
-    val pattern = "(-?[0-9]+)([a-z]+)?".r
+    val pattern = "([0-9]+)([a-z]+)?".r
     lower match {
       case pattern(d, u) =>
         val value = d.toLong
