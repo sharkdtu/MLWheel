@@ -3,9 +3,16 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.sharkdtu.mlwheel</groupId>
-  <artifactId>mlwheel_2.11</artifactId>
+  <artifactId>mlwheel-parent_2.11</artifactId>
   <version>0.1-SNAPSHOT</version>
-  <name>MLWheel(A BSP PS)</name>
+  <packaging>pom</packaging>
+  <name>MLWheel Project Parent POM</name>
+
+  <modules>
+    <module>core</module>
+    <module>spark</module>
+    <module>deploy/yarn</module>
+  </modules>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -13,151 +20,14 @@
     <java.version>1.7</java.version>
     <scala.version>2.11.8</scala.version>
     <scala.binary.version>2.11</scala.binary.version>
+    <maven.version>3.3.9</maven.version>
     <akka.version>2.5.0</akka.version>
     <PermGen>512m</PermGen>
     <MaxPermGen>512m</MaxPermGen>
     <CodeCacheSize>1024m</CodeCacheSize>
   </properties>
-
-  <!--
-  <repositories>
-    <repository>
-      <id>softprops-maven</id>
-      <name>softprops-maven</name>
-      <url>http://dl.bintray.com/content/softprops/maven</url>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
-  -->
   
   <dependencies>
-    <!-- scala dependencies-->
-    <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-library</artifactId>
-      <version>${scala.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-reflect</artifactId>
-      <version>${scala.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-compiler</artifactId>
-      <version>${scala.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.scala-lang</groupId>
-          <artifactId>scala-library</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <!-- akka dependencies-->
-    <dependency>
-      <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-actor_${scala.binary.version}</artifactId>
-      <version>${akka.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.scala-lang</groupId>
-          <artifactId>scala-library</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-remote_${scala.binary.version}</artifactId>
-      <version>${akka.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.scala-lang</groupId>
-          <artifactId>scala-library</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>me.lessis</groupId>
-      <artifactId>retry_${scala.binary.version}</artifactId>
-      <version>0.2.1</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.scala-lang</groupId>
-          <artifactId>scala-library</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.spire-math</groupId>
-      <artifactId>spire_${scala.binary.version}</artifactId>
-      <version>0.13.0</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.scala-lang</groupId>
-          <artifactId>scala-library</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <!-- breeze dependencies-->
-    <dependency>
-      <groupId>org.scalanlp</groupId>
-      <artifactId>breeze_${scala.binary.version}</artifactId>
-      <version>0.13.2</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.scala-lang</groupId>
-          <artifactId>scala-library</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.scalanlp</groupId>
-      <artifactId>breeze-natives_${scala.binary.version}</artifactId>
-      <version>0.13.2</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.scala-lang</groupId>
-          <artifactId>scala-library</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>com.github.scopt</groupId>
-      <artifactId>scopt_${scala.binary.version}</artifactId>
-      <version>3.5.0</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.scala-lang</groupId>
-          <artifactId>scala-library</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <version>1.7.25</version>
-    </dependency>
-    <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-      <version>1.2.17</version>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-log4j12</artifactId>
-      <version>1.7.25</version>
-    </dependency>
-
     <!-- for test-->
     <dependency>
       <groupId>junit</groupId>
@@ -179,15 +49,151 @@
     </dependency>
   </dependencies>
 
+  <dependencyManagement>
+    <dependencies>
+      <!-- scala dependencies-->
+      <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-library</artifactId>
+        <version>${scala.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-reflect</artifactId>
+        <version>${scala.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-compiler</artifactId>
+        <version>${scala.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <!-- akka dependencies-->
+      <dependency>
+        <groupId>com.typesafe.akka</groupId>
+        <artifactId>akka-actor_${scala.binary.version}</artifactId>
+        <version>${akka.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>com.typesafe.akka</groupId>
+        <artifactId>akka-remote_${scala.binary.version}</artifactId>
+        <version>${akka.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <!-- breeze dependencies-->
+      <dependency>
+        <groupId>org.scalanlp</groupId>
+        <artifactId>breeze_${scala.binary.version}</artifactId>
+        <version>0.13.2</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.scalanlp</groupId>
+        <artifactId>breeze-natives_${scala.binary.version}</artifactId>
+        <version>0.13.2</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <!-- for parsing parameter -->
+      <dependency>
+        <groupId>com.github.scopt</groupId>
+        <artifactId>scopt_${scala.binary.version}</artifactId>
+        <version>3.5.0</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <!-- for log -->
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>1.7.25</version>
+      </dependency>
+      <dependency>
+        <groupId>log4j</groupId>
+        <artifactId>log4j</artifactId>
+        <version>1.2.17</version>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-log4j12</artifactId>
+        <version>1.7.25</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
   <build>
-    <outputDirectory>target/scala-${scala.binary.version}/classes</outputDirectory>
-    <testOutputDirectory>target/scala-${scala.binary.version}/test-classes</testOutputDirectory>
-    <resources>
-      <resource>
-        <directory>src/main/resources</directory>
-      </resource>
-    </resources>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>1.4.1</version>
+        <executions>
+          <execution>
+            <id>enforce-versions</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <requireMavenVersion>
+                  <version>${maven.version}</version>
+                </requireMavenVersion>
+                <requireJavaVersion>
+                  <version>${java.version}</version>
+                </requireJavaVersion>
+                <bannedDependencies>
+                  <excludes>
+                    <!--
+                      Akka depends on io.netty:netty, which puts classes under the org.jboss.netty
+                      package. This conflicts with the classes in org.jboss.netty:netty
+                      artifact, so we have to ban that artifact here. In Netty 4.x, the classes
+                      are under the io.netty package, so it's fine for us to depend on both
+                      io.netty:netty and io.netty:netty-all.
+                    -->
+                    <exclude>org.jboss.netty</exclude>
+                    <exclude>org.codehaus.groovy</exclude>
+                    <exclude>*:*_2.10</exclude>
+                  </excludes>
+                  <searchTransitive>true</searchTransitive>
+                </bannedDependencies>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>net.alchim31.maven</groupId>
         <artifactId>scala-maven-plugin</artifactId>
@@ -267,6 +273,25 @@
           </execution>
         </executions>
       </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>3.0.1</version>
+        <configuration>
+          <attach>true</attach>
+        </configuration>
+        <executions>
+          <execution>
+            <id>create-source-jar</id>
+            <goals>
+              <goal>jar-no-fork</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Check java styles -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
@@ -279,7 +304,7 @@
             <dir>${basedir}/src/main/scala</dir>
           </sourceDirectories>
           <testSourceDirectory>${basedir}/src/test/java</testSourceDirectory>
-          <configLocation>${basedir}/dev/javastyle-config.xml</configLocation>
+          <configLocation>dev/javastyle-config.xml</configLocation>
           <outputFile>${basedir}/target/javastyle-output.xml</outputFile>
         </configuration>
         <executions>
@@ -290,6 +315,8 @@
           </execution>
         </executions>
       </plugin>
+
+      <!-- Check scala styles -->
       <plugin>
         <groupId>org.scalastyle</groupId>
         <artifactId>scalastyle-maven-plugin</artifactId>
@@ -301,7 +328,7 @@
           <failOnWarning>false</failOnWarning>
           <sourceDirectory>${basedir}/src/main/scala</sourceDirectory>
           <testSourceDirectory>${basedir}/src/test/scala</testSourceDirectory>
-          <configLocation>${basedir}/dev/scalastyle-config.xml</configLocation>
+          <configLocation>dev/scalastyle-config.xml</configLocation>
           <outputFile>${basedir}/target/scalastyle-output.xml</outputFile>
           <inputEncoding>${project.build.sourceEncoding}</inputEncoding>
           <outputEncoding>${project.reporting.outputEncoding}</outputEncoding>
@@ -314,6 +341,7 @@
           </execution>
         </executions>
       </plugin>
+
       <!-- Surefire runs all Java tests -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -339,6 +367,7 @@
           </execution>
         </executions>
       </plugin>
+
       <!-- Scalatest runs all Scala tests -->
       <plugin>
         <groupId>org.scalatest</groupId>
