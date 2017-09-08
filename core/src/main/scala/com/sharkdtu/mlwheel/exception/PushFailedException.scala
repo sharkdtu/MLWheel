@@ -5,5 +5,5 @@ package com.sharkdtu.mlwheel.exception
  *
  * @param message A specific error message detailing what failed
  */
-class PushFailedException(message: String) extends Exception(message)
+class PushFailedException(message: String) extends MLWheelException(message)
 

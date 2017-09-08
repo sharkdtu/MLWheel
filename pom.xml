@@ -12,6 +12,7 @@
     <module>core</module>
     <module>spark</module>
     <module>deploy/yarn</module>
+    <module>assembly</module>
   </modules>
 
   <properties>
@@ -22,9 +23,15 @@
     <scala.binary.version>2.11</scala.binary.version>
     <maven.version>3.3.9</maven.version>
     <akka.version>2.5.0</akka.version>
+    <hadoop.version>2.7.3</hadoop.version>
+    <hadoop.deps.scope>provided</hadoop.deps.scope>
+    <breeze.version>0.13.2</breeze.version>
+    <scopt.version>3.5.0</scopt.version>
     <PermGen>512m</PermGen>
     <MaxPermGen>512m</MaxPermGen>
     <CodeCacheSize>1024m</CodeCacheSize>
+    <jars.target.dir>${project.build.directory}/scala-${scala.binary.version}/jars</jars.target.dir>
+    <build.copyDependenciesPhase>none</build.copyDependenciesPhase>
   </properties>
   
   <dependencies>
@@ -113,7 +120,7 @@
       <dependency>
         <groupId>org.scalanlp</groupId>
         <artifactId>breeze-natives_${scala.binary.version}</artifactId>
-        <version>0.13.2</version>
+        <version>${breeze.version}</version>
         <exclusions>
           <exclusion>
             <groupId>org.scala-lang</groupId>
@@ -126,7 +133,7 @@
       <dependency>
         <groupId>com.github.scopt</groupId>
         <artifactId>scopt_${scala.binary.version}</artifactId>
-        <version>3.5.0</version>
+        <version>${scopt.version}</version>
         <exclusions>
           <exclusion>
             <groupId>org.scala-lang</groupId>
@@ -194,6 +201,7 @@
           </execution>
         </executions>
       </plugin>
+
       <plugin>
         <groupId>net.alchim31.maven</groupId>
         <artifactId>scala-maven-plugin</artifactId>
@@ -244,6 +252,7 @@
           </javacArgs>
         </configuration>
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -261,14 +270,14 @@
         <artifactId>maven-dependency-plugin</artifactId>
         <executions>
           <execution>
-            <id>copy</id>
-            <phase>package</phase>
+            <id>copy-module-dependencies</id>
+            <phase>${build.copyDependenciesPhase}</phase>
             <goals>
               <goal>copy-dependencies</goal>
             </goals>
             <configuration>
               <includeScope>runtime</includeScope>
-              <outputDirectory>${project.build.directory}/lib</outputDirectory>
+              <outputDirectory>${jars.target.dir}</outputDirectory>
             </configuration>
           </execution>
         </executions>
@@ -376,7 +385,7 @@
         <configuration>
           <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
           <junitxml>.</junitxml>
-          <filereports>mlwheel.txt</filereports>
+          <filereports>MLWheelTestSuite.txt</filereports>
           <argLine>-ea -Xmx2g -XX:MaxPermSize=${MaxPermGen} -XX:ReservedCodeCacheSize=${CodeCacheSize}</argLine>
           <stderr/>
         </configuration>
