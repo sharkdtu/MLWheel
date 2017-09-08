@@ -18,13 +18,13 @@ class PartitionerSuite extends MLWheelFunSuite {
     )
   }
 
-  // Test invalid strings
+  // Test invalid elemIndex
   intercept[IndexOutOfBoundsException] {
     val partitioner = new RangePartitioner(4, 19)
     partitioner.getPartitionId(19)
   }
 
-  // Test invalid strings
+  // Test invalid elemIndex
   intercept[IndexOutOfBoundsException] {
     val partitioner = new RangePartitioner(4, 19)
     partitioner.getPartitionId(-1)
