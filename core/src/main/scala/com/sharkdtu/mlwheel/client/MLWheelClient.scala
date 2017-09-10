@@ -60,60 +60,51 @@ class MLWheelClient(conf: MLWheelConf) {
       mean: Double,
       stddev: Double): PSVector[T] = ???
 
-  // Mark this client as last active client.
-  // NOTE: this must be placed at the end of the MLWheelClient constructor.
-  MLWheelClient.setLastActiveClient(this)
 }
 
+/**
+ * Companion Object for using singleton client
+ */
 object MLWheelClient {
 
   /**
-   * Lock that guards access to global `_lastActiveClient`.
+   * Lock that guards creating `_client`.
    */
   private val _LOCK = new Object()
 
   /**
-   * The last active, fully-constructed MLWheelClient.
-   * If no MLWheelClient is active, then this is `null`.
-   *
-   * Access to this field is guarded by _LOCK.
+   * The singleton MLWheelClient object.
    */
-  private var _lastActiveClient: AtomicReference[MLWheelClient] =
-    new AtomicReference[MLWheelClient](null)
+  private var _client: MLWheelClient = _
 
   /**
-   * Set the last active client.
-   * Called at the end of the MLWheelClient constructor.
+   * This function may be used to get or instantiate a MLWheelClient and register it as a
+   * singleton object.
    *
-   * @param client The MLWheelClient object
+   * @return The singleton `MLWheelClient` (or a new one if wasn't created before the function call)
    */
-  private[mlwheel] def setLastActiveClient(client: MLWheelClient): Unit = {
-    _LOCK.synchronized {
-      _lastActiveClient.set(client)
+  def getOrCreate(): MLWheelClient = {
+    if (_client == null) {
+      _LOCK.synchronized {
+        if (_client == null) _client = new MLWheelClient()
+      }
     }
+    _client
   }
 
   /**
    * This function may be used to get or instantiate a MLWheelClient and register it as a
-   * latest object.
+   * singleton object.
    *
-   * @return Last active `MLWheelClient` (or a new one if wasn't created before the function call)
+   * @param conf The MLWheel configuration
+   * @return The singleton `MLWheelClient` (or a new one if wasn't created before the function call)
    */
-  def getOrCreate(): MLWheelClient = {
-    _LOCK.synchronized {
-      if (_lastActiveClient.get() == null) {
-        setLastActiveClient(new MLWheelClient())
-      }
-      _lastActiveClient.get()
-    }
-  }
-
   def getOrCreate(conf: MLWheelConf): MLWheelClient = {
-    _LOCK.synchronized {
-      if (_lastActiveClient.get() == null) {
-        setLastActiveClient(new MLWheelClient(conf))
+    if (_client == null) {
+      _LOCK.synchronized {
+        if (_client == null) _client = new MLWheelClient(conf)
       }
-      _lastActiveClient.get()
     }
+    _client
   }
 }

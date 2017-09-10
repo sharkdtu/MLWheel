@@ -13,7 +13,7 @@ import scala.reflect.{classTag, ClassTag}
 abstract class PSVariable[T: ClassTag](val id: Int, val numPartitions: Int)
   extends Serializable with Logging {
 
-  requireType()
+  requireElemTypes()
 
   @transient
   private var _name: String = _
@@ -79,7 +79,7 @@ abstract class PSVariable[T: ClassTag](val id: Int, val numPartitions: Int)
   /**
    * Check the T is one of type from "int, long, float, double".
    */
-  private def requireType(): Unit = {
+  private def requireElemTypes(): Unit = {
     val optionElemTypes = Array("int", "long", "float", "double")
     if(!optionElemTypes.exists(_.equals(classTag[T].runtimeClass.toString))){
       throw new UnsupportedOperationException(
