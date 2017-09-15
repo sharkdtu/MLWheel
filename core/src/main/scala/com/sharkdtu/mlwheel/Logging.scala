@@ -102,11 +102,11 @@ private[mlwheel] trait Logging {
           case Some(url) =>
             PropertyConfigurator.configure(url)
             // scalastyle:off println
-            System.err.println(s"Using MLWheel's default log4j profile: $defaultLogProps")
+            System.err.println(s"Using default log4j profile: $defaultLogProps")
             // scalastyle:on println
           case None =>
             // scalastyle:off println
-            System.err.println(s"MLWheel was unable to load $defaultLogProps")
+            System.err.println(s"Unable to load $defaultLogProps")
           // scalastyle:on println
         }
       }

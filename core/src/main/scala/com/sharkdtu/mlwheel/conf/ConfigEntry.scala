@@ -3,8 +3,8 @@ package com.sharkdtu.mlwheel.conf
 /**
  * An entry contains all meta information for a configuration.
  *
- * When applying variable substitution to config values, only references starting with "mlwheel."
- * are considered in the default namespace. For known MLWheel configuration keys (i.e. those
+ * When applying variable substitution to config values, only references starting with "ps."
+ * are considered in the default namespace. For known PS configuration keys (i.e. those
  * created using `ConfigBuilder`), references will also consider the default value when it exists.
  *
  * Variable expansion is also applied to the default values of config entries that have a default

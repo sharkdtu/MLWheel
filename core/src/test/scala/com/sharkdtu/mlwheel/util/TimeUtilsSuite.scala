@@ -1,9 +1,9 @@
 package com.sharkdtu.mlwheel.util
 
-import com.sharkdtu.mlwheel.MLWheelFunSuite
+import com.sharkdtu.mlwheel.PSFunSuite
 
 
-class TimeUtilsSuite extends MLWheelFunSuite {
+class TimeUtilsSuite extends PSFunSuite {
 
   test("timeStringAsUs") {
     assert(TimeUtils.timeStringAsUs("4") == 4L)

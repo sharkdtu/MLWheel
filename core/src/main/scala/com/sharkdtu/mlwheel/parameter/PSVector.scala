@@ -1,5 +1,4 @@
 package com.sharkdtu.mlwheel.parameter
-import com.sharkdtu.mlwheel.parameter.partition.{Partition, RangePartitioner}
 
 import scala.reflect.ClassTag
 
@@ -9,7 +8,7 @@ import scala.reflect.ClassTag
  *
  * @param id The unique id of the vector
  */
-class PSVector[@specialized(Double) T: ClassTag] private(
+class PSVector[@specialized(Float, Double) T: ClassTag] private(
     id: Int,
     numPartitions: Int,
     val numDimensions: Int
@@ -21,18 +20,6 @@ class PSVector[@specialized(Double) T: ClassTag] private(
    * @return The number of elements in this vector
    */
   override def numElements: Long = numDimensions.toLong
-
-  /**
-   * Get all partitions of this vector
-   *
-   * @return All partitions
-   */
-  override def getPartitions: Array[Partition] = {
-    // Default partitioner is RangePartitioner
-    partitioner.getOrElse(
-      new RangePartitioner(numPartitions, numElements)
-    ).partitions
-  }
 
   /**
    * Get all the values of this vector from ps
@@ -54,7 +41,7 @@ class PSVector[@specialized(Double) T: ClassTag] private(
 
 /**
  * The factory of PSVector, it is invisible to users.
- * The only entrance of users is [[com.sharkdtu.mlwheel.client.MLWheelClient]]
+ * The only entrance for users is [[com.sharkdtu.mlwheel.client.PSClient]]
  */
 private[mlwheel] object PSVector {
   def apply[T: ClassTag](

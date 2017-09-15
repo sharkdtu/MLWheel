@@ -36,15 +36,7 @@ private object ConfigHelpers {
 
   def timeToString(v: Long, unit: TimeUnit): String = TimeUnit.MILLISECONDS.convert(v, unit) + "ms"
 
-  def byteFromString(str: String, unit: ByteUnit): Long = {
-    val (input, multiplier) =
-      if (str.length() > 0 && str.charAt(0) == '-') {
-        (str.substring(1), -1)
-      } else {
-        (str, 1)
-      }
-    multiplier * ByteUtils.byteStringAs(input, unit)
-  }
+  def byteFromString(str: String, unit: ByteUnit): Long = ByteUtils.byteStringAs(str, unit)
 
   def byteToString(v: Long, unit: ByteUnit): String = unit.convertTo(v, ByteUnit.BYTE) + "Byte"
 
@@ -55,12 +47,12 @@ private object ConfigHelpers {
  * used, e.g., for validation) and creating the final config entry.
  *
  * One of the methods that return a [[ConfigEntry]] must be called to create a config entry that
- * can be used with [[MLWheelConf]].
+ * can be used with [[PSConf]].
  */
 private[mlwheel] class TypedConfigBuilder[T](
-  val parent: ConfigBuilder,
-  val converter: String => T,
-  val stringConverter: T => String) {
+    val parent: ConfigBuilder,
+    val converter: String => T,
+    val stringConverter: T => String) {
 
   import ConfigHelpers._
 
@@ -100,7 +92,7 @@ private[mlwheel] class TypedConfigBuilder[T](
       val transformedDefault = converter(stringConverter(default))
       val entry = new ConfigEntryWithDefault[T](parent.key, transformedDefault, converter,
         stringConverter, parent._doc, parent._public)
-      parent._onCreate.foreach(_(entry))
+      parent._onCreate.foreach(func => func(entry))
       entry
     }
   }
@@ -112,7 +104,7 @@ private[mlwheel] class TypedConfigBuilder[T](
   def createWithDefaultString(default: String): ConfigEntry[T] = {
     val entry = new ConfigEntryWithDefaultString[T](
       parent.key, default, converter, stringConverter, parent._doc, parent._public)
-    parent._onCreate.foreach(_(entry))
+    parent._onCreate.foreach(func => func(entry))
     entry
   }
 

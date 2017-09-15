@@ -5,4 +5,6 @@ package com.sharkdtu.mlwheel.exception
  *
  * @param message A specific error message detailing what failed
  */
-class MLWheelException(message: String) extends Exception(message)
+class PSException(message: String, e: Throwable) extends Exception(message, e) {
+  def this(message: String) = this(message, null)
+}

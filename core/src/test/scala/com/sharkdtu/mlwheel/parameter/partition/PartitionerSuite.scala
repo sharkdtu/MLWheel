@@ -1,8 +1,8 @@
 package com.sharkdtu.mlwheel.parameter.partition
 
-import com.sharkdtu.mlwheel.MLWheelFunSuite
+import com.sharkdtu.mlwheel.PSFunSuite
 
-class PartitionerSuite extends MLWheelFunSuite {
+class PartitionerSuite extends PSFunSuite {
 
   test("RangePartitioner") {
     val partitioner = new RangePartitioner(4, 19)

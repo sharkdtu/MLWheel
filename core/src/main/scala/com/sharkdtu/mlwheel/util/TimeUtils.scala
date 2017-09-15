@@ -2,7 +2,7 @@ package com.sharkdtu.mlwheel.util
 
 import java.util.concurrent.TimeUnit
 
-object TimeUtils {
+private[mlwheel] object TimeUtils {
 
   private val timeSuffixes = Map(
     "us" -> TimeUnit.MICROSECONDS,

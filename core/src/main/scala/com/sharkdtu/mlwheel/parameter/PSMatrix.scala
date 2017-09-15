@@ -1,5 +1,4 @@
 package com.sharkdtu.mlwheel.parameter
-import com.sharkdtu.mlwheel.parameter.partition.{Partition, RangePartitioner}
 
 import scala.reflect.ClassTag
 
@@ -9,7 +8,7 @@ import scala.reflect.ClassTag
  *
  * @param id The unique id of the matrix
  */
-class PSMatrix[@specialized(Double) T: ClassTag] private(
+class PSMatrix[@specialized(Float, Double) T: ClassTag] private(
     id: Int,
     numPartitions: Int,
     val numRows: Int,
@@ -22,18 +21,6 @@ class PSMatrix[@specialized(Double) T: ClassTag] private(
    * @return The number of elements in this matrix
    */
   override def numElements: Long = 1L * numRows * numCols
-
-  /**
-   * Get all partitions of this matrix
-   *
-   * @return All partitions
-   */
-  override def getPartitions: Array[Partition] = {
-    // Default partitioner is RangePartitioner
-    partitioner.getOrElse(
-      new RangePartitioner(numPartitions, numElements)
-    ).partitions
-  }
 
   /**
    * Get all the values of this matrix from ps.
@@ -53,7 +40,8 @@ class PSMatrix[@specialized(Double) T: ClassTag] private(
 }
 
 /**
- * The factory of PSMatrix, it is invisible to users
+ * The factory of PSMatrix, it is invisible to users.
+ * The only entrance for users is [[com.sharkdtu.mlwheel.client.PSClient]]
  */
 private[mlwheel] object PSMatrix {
   def apply[T: ClassTag](

@@ -1,9 +1,9 @@
 package com.sharkdtu.mlwheel.parameter
 
-import com.sharkdtu.mlwheel.Logging
-import com.sharkdtu.mlwheel.parameter.partition.{Partition, Partitioner}
+import scala.reflect.{ClassTag, classTag}
 
-import scala.reflect.{classTag, ClassTag}
+import com.sharkdtu.mlwheel.Logging
+import com.sharkdtu.mlwheel.parameter.partition.{Partition, Partitioner, RangePartitioner}
 
 /**
  * A Variable reference represent a variable on ps.
@@ -15,13 +15,15 @@ abstract class PSVariable[T: ClassTag](val id: Int, val numPartitions: Int)
 
   requireElemTypes()
 
-  @transient
-  private var _name: String = _
+  /**
+   * A Optional name of this PSVariable
+   */
+  @transient private var _name: String = _
 
   /**
-   * Optionally set by subclasses to specify how they are partitioned.
+   * Specify how this PSVariable is partitioned.
    */
-  @transient var _partitioner: Option[Partitioner] = None
+  @transient private var _partitioner: Partitioner = _
 
   /** Assign a name to this Variable */
   def setName(name: String): this.type = {
@@ -32,15 +34,18 @@ abstract class PSVariable[T: ClassTag](val id: Int, val numPartitions: Int)
   def name: String = _name
 
   /**
-   * Assign a partitioner to this Variable
+   * Assign a partitioner to this Variable.
+   *
+   * @param partitioner The partitioner
+   * @note It's not thread-safety
    */
   def setPartitioner(partitioner: Partitioner): this.type = {
     require(partitioner != null, "partitioner is null")
-    _partitioner = Some(partitioner)
+    _partitioner = partitioner
     this
   }
 
-  def partitioner: Option[Partitioner] = _partitioner
+  def partitioner: Partitioner = _partitioner
 
   /**
    * Get the number of elements in this variable.
@@ -54,7 +59,13 @@ abstract class PSVariable[T: ClassTag](val id: Int, val numPartitions: Int)
    *
    * @return All partitions
    */
-  def getPartitions: Array[Partition]
+  final def getPartitions: Array[Partition] = {
+    if (partitioner == null) {
+      // Set RangePartitioner to default partitioner
+      setPartitioner(new RangePartitioner(numPartitions, numElements))
+    }
+    partitioner.partitions
+  }
 
   /**
    * Returns the number of partitions of this variable.
@@ -77,13 +88,13 @@ abstract class PSVariable[T: ClassTag](val id: Int, val numPartitions: Int)
   def getValues(partitionId: Int): Array[T]
 
   /**
-   * Check the T is one of type from "int, long, float, double".
+   * Whether the `T` is one of type from "float, double".
    */
   private def requireElemTypes(): Unit = {
-    val optionElemTypes = Array("int", "long", "float", "double")
+    val optionElemTypes = Array("float", "double")
     if(!optionElemTypes.exists(_.equals(classTag[T].runtimeClass.toString))){
       throw new UnsupportedOperationException(
-        "The general type 'T' is limited in [Int, Long, Float, Double]")
+        "The general type 'T' is limited in [Float, Double]")
     }
   }
 

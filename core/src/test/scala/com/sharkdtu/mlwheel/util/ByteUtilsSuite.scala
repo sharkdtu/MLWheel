@@ -1,9 +1,9 @@
 package com.sharkdtu.mlwheel.util
 
-import com.sharkdtu.mlwheel.MLWheelFunSuite
+import com.sharkdtu.mlwheel.PSFunSuite
 
 
-class ByteUtilsSuite extends MLWheelFunSuite {
+class ByteUtilsSuite extends PSFunSuite {
 
   test("byteStringAsByte") {
     assert(ByteUtils.byteStringAsByte("4") == 4L)

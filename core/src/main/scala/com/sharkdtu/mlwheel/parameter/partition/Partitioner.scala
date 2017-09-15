@@ -5,7 +5,7 @@ package com.sharkdtu.mlwheel.parameter.partition
  * in [[com.sharkdtu.mlwheel.parameter.PSVariable]] are partitioned by element's index.
  * Maps each element's index to a partition id, from 0 to `numPartitions - 1`.
  */
-abstract class Partitioner(val numPartitions: Int) extends Serializable {
+abstract class Partitioner(val numPartitions: Int) {
   def partitions: Array[Partition]
   def getPartitionId(elemIndex: Long): Int
 }

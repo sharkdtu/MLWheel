@@ -5,7 +5,7 @@ import java.io.File
 import org.scalatest.{BeforeAndAfterAll, FunSuite, Outcome}
 
 
-abstract class MLWheelFunSuite extends FunSuite with BeforeAndAfterAll with Logging {
+abstract class PSFunSuite extends FunSuite with BeforeAndAfterAll with Logging {
 
   protected override def beforeAll(): Unit = {
     super.beforeAll()

@@ -1,6 +1,6 @@
 package com.sharkdtu.mlwheel.util
 
-class ByteUnit(val multiplier: Long, val name: String) {
+private[mlwheel] class ByteUnit(val multiplier: Long, val name: String) {
   import ByteUnit._
 
   // Convert the provided number (d) interpreted as this unit type to unit type (u).
@@ -38,7 +38,7 @@ class ByteUnit(val multiplier: Long, val name: String) {
 
 }
 
-object ByteUnit {
+private[mlwheel] object ByteUnit {
 
   private def apply(multiplier: Long, name: String): ByteUnit = {
     new ByteUnit(multiplier, name)
@@ -53,7 +53,7 @@ object ByteUnit {
 
 }
 
-object ByteUtils {
+private[mlwheel] object ByteUtils {
 
   private val byteSuffixes = Map(
     "Byte" -> ByteUnit.BYTE,
