@@ -1,19 +1,17 @@
 package com.sharkdtu.mlwheel.parameter
 
-import scala.reflect.ClassTag
-
 /**
  * A PS Matrix whose data is located on parameter servers.
  * It can not be instantiated through `new PSMatrix`.
  *
  * @param id The unique id of the matrix
  */
-class PSMatrix[@specialized(Float, Double) T: ClassTag] private(
+class PSMatrix private(
     id: Int,
     numPartitions: Int,
     val numRows: Int,
     val numCols: Int
-  ) extends PSVariable[T](id, numPartitions) {
+  ) extends PSVariable(id, numPartitions) {
 
   /**
    * Get the number of elements in this matrix.
@@ -28,7 +26,7 @@ class PSMatrix[@specialized(Float, Double) T: ClassTag] private(
    * @return The values of this matrix
    * @note This operation is expensive
    */
-  override def getValues: Array[T] = ???
+  override def getValues: Array[Double] = ???
 
   /**
    * Get the specified partition values of this matrix from ps
@@ -36,7 +34,7 @@ class PSMatrix[@specialized(Float, Double) T: ClassTag] private(
    * @param partitionId The partition index
    * @return The values of this matrix
    */
-  override def getValues(partitionId: Int): Array[T] = ???
+  override def getValues(partitionId: Int): Array[Double] = ???
 }
 
 /**
@@ -44,10 +42,10 @@ class PSMatrix[@specialized(Float, Double) T: ClassTag] private(
  * The only entrance for users is [[com.sharkdtu.mlwheel.client.PSClient]]
  */
 private[mlwheel] object PSMatrix {
-  def apply[T: ClassTag](
+  def apply(
       id: Int,
       numPartitions: Int,
       numRows: Int,
-      numCols: Int): PSMatrix[T] =
-    new PSMatrix[T](id, numPartitions, numRows, numCols)
+      numCols: Int): PSMatrix =
+    new PSMatrix(id, numPartitions, numRows, numCols)
 }

@@ -1,19 +1,15 @@
 package com.sharkdtu.mlwheel.parameter
 
-import scala.reflect.{ClassTag, classTag}
-
 import com.sharkdtu.mlwheel.Logging
-import com.sharkdtu.mlwheel.parameter.partition.{Partition, Partitioner, RangePartitioner}
+import com.sharkdtu.mlwheel.parameter.partition._
 
 /**
  * A Variable reference represent a variable on ps.
  *
  * @param id The unique id of the variable
  */
-abstract class PSVariable[T: ClassTag](val id: Int, val numPartitions: Int)
+abstract class PSVariable(val id: Int, val numPartitions: Int)
   extends Serializable with Logging {
-
-  requireElemTypes()
 
   /**
    * A Optional name of this PSVariable
@@ -77,7 +73,7 @@ abstract class PSVariable[T: ClassTag](val id: Int, val numPartitions: Int)
    *
    * @return The values of this variable
    */
-  def getValues: Array[T]
+  def getValues: Array[Double]
 
   /**
    * Get the specified partition values of this variable from ps.
@@ -85,18 +81,7 @@ abstract class PSVariable[T: ClassTag](val id: Int, val numPartitions: Int)
    * @param partitionId The partition index
    * @return The values of this variable
    */
-  def getValues(partitionId: Int): Array[T]
-
-  /**
-   * Whether the `T` is one of type from "float, double".
-   */
-  private def requireElemTypes(): Unit = {
-    val optionElemTypes = Array("float", "double")
-    if(!optionElemTypes.exists(_.equals(classTag[T].runtimeClass.toString))){
-      throw new UnsupportedOperationException(
-        "The general type 'T' is limited in [Float, Double]")
-    }
-  }
+  def getValues(partitionId: Int): Array[Double]
 
   override def toString: String = "%s%s-%d".format(
     Option(name).map(_ + "-").getOrElse(""), getClass.getSimpleName, id)

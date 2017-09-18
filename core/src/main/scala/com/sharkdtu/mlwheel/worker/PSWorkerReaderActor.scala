@@ -7,7 +7,8 @@ import com.sharkdtu.mlwheel.{ActorLogReceive, Logging}
 /**
  * Process 'client -> worker' reading messages
  */
-class PSWorkerReaderActor extends Actor with ActorLogReceive with Logging {
+private[mlwheel] class PSWorkerReaderActor
+  extends Actor with ActorLogReceive with Logging {
 
   override def receiveWithLogging: Receive = ???
 

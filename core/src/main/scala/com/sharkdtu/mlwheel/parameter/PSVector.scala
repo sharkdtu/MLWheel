@@ -1,18 +1,16 @@
 package com.sharkdtu.mlwheel.parameter
 
-import scala.reflect.ClassTag
-
 /**
  * A PS PSVector whose data is located on parameter servers.
  * It can not be instantiated through `new PSVector`.
  *
  * @param id The unique id of the vector
  */
-class PSVector[@specialized(Float, Double) T: ClassTag] private(
+class PSVector private(
     id: Int,
     numPartitions: Int,
     val numDimensions: Int
-  ) extends PSVariable[T](id, numPartitions) {
+  ) extends PSVariable(id, numPartitions) {
 
   /**
    * Get the number of elements in this vector.
@@ -27,7 +25,7 @@ class PSVector[@specialized(Float, Double) T: ClassTag] private(
    * @return The values of this vector
    * @note This operation is expensive
    */
-  override def getValues: Array[T] = ???
+  override def getValues: Array[Double] = ???
 
   /**
    * Get the specified partition values of this vector from ps
@@ -35,7 +33,7 @@ class PSVector[@specialized(Float, Double) T: ClassTag] private(
    * @param partitionId The partition index
    * @return The values of this vector
    */
-  override def getValues(partitionId: Int): Array[T] = ???
+  override def getValues(partitionId: Int): Array[Double] = ???
 
 }
 
@@ -44,9 +42,9 @@ class PSVector[@specialized(Float, Double) T: ClassTag] private(
  * The only entrance for users is [[com.sharkdtu.mlwheel.client.PSClient]]
  */
 private[mlwheel] object PSVector {
-  def apply[T: ClassTag](
+  def apply(
       id: Int,
       numPartitions: Int,
-      numDimensions: Int): PSVector[T] =
-    new PSVector[T](id, numPartitions, numDimensions)
+      numDimensions: Int): PSVector =
+    new PSVector(id, numPartitions, numDimensions)
 }

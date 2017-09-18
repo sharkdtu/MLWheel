@@ -103,4 +103,19 @@ package object conf {
     ConfigBuilder("ps.akka.ask.retry.interval")
       .timeConf(TimeUnit.MILLISECONDS)
       .createWithDefaultString("3000ms")
+
+  // ============================================ //
+  //             PSVariable settings              //
+  // ============================================ //
+  private[mlwheel] val PARTITION_MIN_ELEMENTS =
+    ConfigBuilder("ps.partition.minElements")
+      .doc("minimum number of elements in one partition.")
+      .intConf
+      .createWithDefault(1000)
+
+  private[mlwheel] val PARTITION_MAX_ELEMENTS =
+    ConfigBuilder("ps.partition.minElements")
+      .doc("maximum number of elements in one partition.")
+      .intConf
+      .createWithDefault(10000)
 }

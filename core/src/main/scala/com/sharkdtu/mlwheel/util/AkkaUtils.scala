@@ -96,7 +96,7 @@ private[mlwheel] object AkkaUtils extends Logging {
    * Send a message to the given actor and get its result within a default timeout, or
    * throw a MLWheelException if this fails even after the specified number of retries.
    */
-  def askWithRetry[T](message: Any, actor: ActorRef, conf: PSConf): T = {
+  def askWithRetry[T](actor: ActorRef, message: Any, conf: PSConf): T = {
     if (actor == null) {
       throw new PSException(s"Error sending message [message = $message]" +
         " as actor is null ")
@@ -154,9 +154,9 @@ private[mlwheel] object AkkaUtils extends Logging {
    */
   def makePSWorkerRef(
       name: String,
-      conf: PSConf,
       host: String,
       port: Int,
+      conf: PSConf,
       actorSystem: ActorSystem): ActorRef = {
     val actorSystemName = PSContext.psWorkerActorSystemName
     val url = address(protocol(actorSystem), actorSystemName, host, port, name)

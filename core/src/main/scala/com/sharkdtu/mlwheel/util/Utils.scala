@@ -126,4 +126,26 @@ private[mlwheel] object Utils extends Logging {
     address.getHostAddress
   }
 
+  def getActualNumPartitions(numDimensions: Int, numPartitions: Int, conf: PSConf): Int = {
+    val minNumElementsOfPartition = conf.get(PARTITION_MIN_ELEMENTS)
+    val maxNumElementsOfPartition = conf.get(PARTITION_MAX_ELEMENTS)
+    if (numPartitions <= 0) {
+      logInfo("numPartitions <= 0, auto split the vector.")
+      1 + numDimensions / minNumElementsOfPartition
+    } else {
+      val numElementsOfLargePartition = 1 + numDimensions / numPartitions
+      if (numElementsOfLargePartition > maxNumElementsOfPartition) {
+        logWarning(s"The number elements of one partition maybe greater than" +
+          s"${PARTITION_MAX_ELEMENTS.key}($maxNumElementsOfPartition)")
+        numPartitions
+      } else if (numElementsOfLargePartition < minNumElementsOfPartition) {
+        logWarning(s"The number elements of one partition maybe less than" +
+          s"${PARTITION_MIN_ELEMENTS.key}($minNumElementsOfPartition), auto split the vector.")
+        1 + numDimensions / minNumElementsOfPartition
+      } else {
+        numPartitions
+      }
+    }
+  }
+
 }

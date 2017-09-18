@@ -16,6 +16,12 @@ private[mlwheel] class PSContext private(
     val actorSystem: ActorSystem
   ) extends Logging {
 
+  def stop(): Unit = {
+    actorSystem.terminate().foreach { _ =>
+      logInfo("Actor system was shut down.")
+    }
+  }
+
 }
 
 private[mlwheel] object PSContext extends Logging {
@@ -26,12 +32,19 @@ private[mlwheel] object PSContext extends Logging {
   val psMasterActorSystemName = "ps-master"
   val psWorkerActorSystemName = "ps-worker"
 
-  object Role extends Enumeration{
+  object Role extends Enumeration {
     type Role = Value
     val CLIENT, MASTER, WORKER = Value
   }
-
   import Role._
+
+  object PSMasterActorNames {
+    val psMasterActorName = "receptionist"
+  }
+
+  object PSWorkerActorNames {
+    val psWorkerActorName = "receptionist"
+  }
 
   /**
    * Returns the only [[PSContext]].
