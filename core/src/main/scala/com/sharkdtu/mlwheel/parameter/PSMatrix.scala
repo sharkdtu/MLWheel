@@ -7,7 +7,7 @@ package com.sharkdtu.mlwheel.parameter
  * @param id The unique id of the matrix
  */
 class PSMatrix private(
-    id: Int,
+    id: String,
     numPartitions: Int,
     val numRows: Int,
     val numCols: Int

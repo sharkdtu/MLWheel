@@ -8,7 +8,7 @@ import com.sharkdtu.mlwheel.parameter.partition._
  *
  * @param id The unique id of the variable
  */
-abstract class PSVariable(val id: Int, val numPartitions: Int)
+abstract class PSVariable(val id: String, val numPartitions: Int)
   extends Serializable with Logging {
 
   /**

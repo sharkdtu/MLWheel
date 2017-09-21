@@ -1,11 +1,10 @@
 package com.sharkdtu.mlwheel.master
 
-import scala.collection.mutable
-
-import akka.actor.{Actor, ActorRef, Props, Terminated}
+import akka.actor.{Actor, Props, Terminated}
 
 import com.sharkdtu.mlwheel.conf.{PSConf, _}
 import com.sharkdtu.mlwheel.message.RegisterMessages._
+import com.sharkdtu.mlwheel.message.WritingMessages.CreateVector
 import com.sharkdtu.mlwheel.{ActorLogReceive, Logging, PSContext}
 
 
@@ -13,52 +12,32 @@ private class PSMasterActor(manager: PSVariableMetaManager)
   extends Actor with ActorLogReceive with Logging {
 
   /**
-   * Collection of clients available
-   */
-  val clients = mutable.HashSet.empty[ActorRef]
-
-  /**
-   * Collection of workers available
-   */
-  val workers = mutable.HashSet.empty[ActorRef]
-
-  /**
    * The PSMasterReaderActor ref for processing ReadingMessages
    */
-  private val reader = context.actorOf(Props[PSMasterReaderActor])
+  private val reader = context.actorOf(Props(new PSMasterReaderActor(manager)))
 
   /**
    * The PSMasterReaderActor ref for processing WritingMessages
    */
-  private val writer = context.actorOf(Props[PSMasterWriterActor])
+  private val writer = context.actorOf(Props(new PSMasterWriterActor(manager)))
 
   override def receiveWithLogging: Receive = {
-    case RegisterClient(client) =>
-      logInfo(s"Registering client: ${sender.path.toString}")
-      clients += client
+
+    case RegisterClientRequest(client) =>
+      manager.registerClient(client)
       context.watch(client)
       sender ! true
 
-    case RegisterWorker(worker) =>
-      logInfo(s"Registering worker: ${sender.path.toString}")
-      workers += worker
+    case RegisterWorkerRequest(worker) =>
+      manager.registerWorker(worker)
       context.watch(worker)
       sender ! true
 
     case Terminated(actor) =>
-      actor match {
-        case client: ActorRef if clients.contains(client) =>
-          logInfo(s"Removing client: ${client.path.toString}")
-          clients -= client
+      manager.remove(actor)
 
-        case worker: ActorRef if workers.contains(worker) =>
-          logInfo(s"Removing worker: ${worker.path.toString}")
-          workers -= worker
-
-        case actor: ActorRef =>
-          logWarning(s"Received terminated notification from" +
-            s"unknown actor ${actor.path.toString}")
-      }
+    case msg: CreateVector =>
+      writer.forward(msg)
   }
 
 }

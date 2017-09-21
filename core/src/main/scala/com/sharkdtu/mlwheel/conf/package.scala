@@ -3,6 +3,7 @@ package com.sharkdtu.mlwheel
 import java.util.concurrent.TimeUnit
 
 import com.sharkdtu.mlwheel.util.ByteUnit
+import com.sharkdtu.mlwheel.serializer.JavaSerializer
 
 /**
  * Some pre-defined conf entries for internal use
@@ -40,6 +41,31 @@ package object conf {
     ConfigBuilder("ps.port.maxRetries")
       .intConf
       .createWithDefault(16)
+
+  private[mlwheel] val SERIALIZER_OBJECT_STREAM_RESET_COUNT =
+    ConfigBuilder("ps.serializer.objectStreamReset.count")
+      .intConf
+      .createWithDefault(100)
+
+  private[mlwheel] val SERIALIZER_EXTRA_DEBUG_INFO_ENABLED =
+    ConfigBuilder("ps.serializer.extraDebugInfo.enabled")
+      .booleanConf
+      .createWithDefault(true)
+
+  private[mlwheel] val FILE_TRANSFER_TO_ENABLED =
+    ConfigBuilder("ps.file.transferTo.enabled")
+      .booleanConf
+      .createWithDefault(true)
+
+  private[mlwheel] val PS_SERIALIZER =
+    ConfigBuilder("ps.serializer")
+      .stringConf
+      .createWithDefault("com.sharkdtu.mlwheel.serializer.JavaSerializer")
+
+  private[mlwheel] val PS_CLIENT_CLEANER_INTERVAL =
+    ConfigBuilder("ps.client.cleaner.interval")
+      .timeConf(TimeUnit.MILLISECONDS)
+      .createWithDefaultString("3000ms")
 
   // ============================================ //
   //                  Akka settings               //
@@ -114,7 +140,7 @@ package object conf {
       .createWithDefault(1000)
 
   private[mlwheel] val PARTITION_MAX_ELEMENTS =
-    ConfigBuilder("ps.partition.minElements")
+    ConfigBuilder("ps.partition.maxElements")
       .doc("maximum number of elements in one partition.")
       .intConf
       .createWithDefault(10000)

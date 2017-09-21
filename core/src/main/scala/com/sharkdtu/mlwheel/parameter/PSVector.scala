@@ -7,7 +7,7 @@ package com.sharkdtu.mlwheel.parameter
  * @param id The unique id of the vector
  */
 class PSVector private(
-    id: Int,
+    id: String,
     numPartitions: Int,
     val numDimensions: Int
   ) extends PSVariable(id, numPartitions) {

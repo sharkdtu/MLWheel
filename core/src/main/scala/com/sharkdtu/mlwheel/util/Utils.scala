@@ -1,8 +1,12 @@
 package com.sharkdtu.mlwheel.util
 
+import java.io._
 import java.net.{BindException, Inet4Address, InetAddress, NetworkInterface}
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicLong
 
 import scala.collection.JavaConversions._
+import scala.util.control.NonFatal
 
 import com.sharkdtu.mlwheel.Logging
 import com.sharkdtu.mlwheel.conf._
@@ -147,5 +151,105 @@ private[mlwheel] object Utils extends Logging {
       }
     }
   }
+
+  /**
+   * Copy all data from an InputStream to an OutputStream. NIO way of file stream to file stream
+   * copying is disabled by default unless explicitly set transferToEnabled as true.
+   */
+  def copyStream(
+      in: InputStream,
+      out: OutputStream,
+      closeStreams: Boolean = false,
+      transferToEnabled: Boolean = false): Long = {
+    var count = 0L
+    try {
+      if (in.isInstanceOf[FileInputStream] && out.isInstanceOf[FileOutputStream]
+        && transferToEnabled) {
+        // When both streams are File stream, use transferTo to improve copy performance.
+        val inChannel = in.asInstanceOf[FileInputStream].getChannel
+        val outChannel = out.asInstanceOf[FileOutputStream].getChannel
+        val initialPos = outChannel.position()
+        val size = inChannel.size()
+
+        // In case transferTo method transferred less data than we have required.
+        while (count < size) {
+          count += inChannel.transferTo(count, size - count, outChannel)
+        }
+
+        // Check the position after transferTo loop to see if it is in the right position and
+        // give user information if not.
+        // Position will not be increased to the expected length after calling transferTo in
+        // kernel version 2.6.32, this issue can be seen in
+        // https://bugs.openjdk.java.net/browse/JDK-7052359
+        val finalPos = outChannel.position()
+        assert(finalPos == initialPos + size,
+          s"""
+             |Current position $finalPos do not equal to expected position ${initialPos + size}
+             |after transferTo, please check your kernel version to see if it is 2.6.32,
+             |this is a kernel bug which will lead to unexpected behavior when using transferTo.
+             |You can set ps.file.transferTo = false to disable this NIO feature.
+           """.stripMargin)
+      } else {
+        val buf = new Array[Byte](8192)
+        var n = 0
+        while (n != -1) {
+          n = in.read(buf)
+          if (n != -1) {
+            out.write(buf, 0, n)
+            count += n
+          }
+        }
+      }
+      count
+    } finally {
+      if (closeStreams) {
+        try {
+          in.close()
+        } finally {
+          out.close()
+        }
+      }
+    }
+  }
+
+  /**
+   * Execute a block of code that evaluates to Unit, re-throwing any non-fatal uncaught
+   * exceptions as IOException.  This is used when implementing Externalizable and Serializable's
+   * read and write methods, since Java's serializer will not report non-IOExceptions properly;
+   */
+  def tryOrIOException(block: => Unit) {
+    try {
+      block
+    } catch {
+      case e: IOException => throw e
+      case NonFatal(t) => throw new IOException(t)
+    }
+  }
+
+  /**
+   * Get the ClassLoader which loaded Spark.
+   */
+  def getPSClassLoader: ClassLoader = getClass.getClassLoader
+
+  /**
+   * Get the Context ClassLoader on this thread or, if not present, the ClassLoader that
+   * loaded PS.
+   *
+   * This should be used whenever passing a ClassLoader to Class.ForName or finding the currently
+   * active loader when setting up ClassLoader delegation chains.
+   */
+  def getContextOrPSClassLoader: ClassLoader =
+    Option(Thread.currentThread().getContextClassLoader).getOrElse(getPSClassLoader)
+
+  /**
+   * Preferred alternative to Class.forName(className)
+   */
+  def classForName(className: String): Class[_] =
+    Class.forName(className, true, getContextOrPSClassLoader)
+
+  /**
+   * Get an UUID
+   */
+  def getNextUUID: String = UUID.randomUUID().toString.replace("-", "")
 
 }

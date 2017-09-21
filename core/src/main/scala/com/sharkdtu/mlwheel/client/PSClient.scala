@@ -6,7 +6,7 @@ import akka.actor.{Actor, Props}
 
 import com.sharkdtu.mlwheel.{ActorLogReceive, Logging, PSContext}
 import com.sharkdtu.mlwheel.conf.{PSConf, _}
-import com.sharkdtu.mlwheel.message.CreatePSVariableMessages.CreateVector
+import com.sharkdtu.mlwheel.message.WritingMessages.CreateVector
 import com.sharkdtu.mlwheel.message.RegisterMessages.RegisterClient
 import com.sharkdtu.mlwheel.parameter.{PSMatrix, PSVector}
 import com.sharkdtu.mlwheel.util.{AkkaUtils, Utils}
@@ -82,7 +82,7 @@ class PSClient(conf: PSConf) extends Logging {
       seed: Long = System.currentTimeMillis()): PSVector = {
     val rand = new Random(seed)
     def genFunc(): Double = {
-      (max-min) * rand.nextDouble() + min
+      (max - min) * rand.nextDouble() + min
     }
 
     createVector(numDimensions, numPartitions, genFunc)
@@ -115,8 +115,10 @@ class PSClient(conf: PSConf) extends Logging {
       genFunc: () => Double): PSVector = {
     val actualNumPartitions = Utils.getActualNumPartitions(
       numDimensions, numPartitions, conf)
+    val cleanedFunc = PSContext.get.clean(genFunc)
     val id = AkkaUtils.askWithRetry[Int](
-      master, CreateVector(numDimensions, actualNumPartitions, genFunc), conf)
+      master, CreateVector(numDimensions, actualNumPartitions, cleanedFunc), conf)
+    logInfo(s"Successfully create ps vector($id)")
     PSVector(id, actualNumPartitions, numDimensions)
   }
 
@@ -130,7 +132,7 @@ class PSClient(conf: PSConf) extends Logging {
    * @param numCols The number of columns
    * @return The zero [[PSMatrix]] instance
    */
-  def zeroMatrix(numRows: Int, numCols: Int): PSMatrix = _
+  def zeroMatrix(numRows: Int, numCols: Int): PSMatrix = _  // TODO
 
 }
 

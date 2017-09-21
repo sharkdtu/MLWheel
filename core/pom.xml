@@ -38,6 +38,21 @@
       <groupId>com.typesafe.akka</groupId>
       <artifactId>akka-remote_${scala.binary.version}</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-slf4j_${scala.binary.version}</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.esotericsoftware</groupId>
+      <artifactId>reflectasm</artifactId>
+      <classifier>shaded</classifier>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+    </dependency>
 
     <!-- breeze dependencies-->
     <dependency>

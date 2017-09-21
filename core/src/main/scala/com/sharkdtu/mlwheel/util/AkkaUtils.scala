@@ -188,4 +188,11 @@ private[mlwheel] object AkkaUtils extends Logging {
     s"$protocol://$systemName@$host:$port/user/$actorName"
   }
 
+  /**
+   * Returns a String representation formatted as:
+   *
+   * `system@host:port`
+   */
+  def getHostPort(actor: ActorRef): String = actor.path.address.hostPort
+
 }

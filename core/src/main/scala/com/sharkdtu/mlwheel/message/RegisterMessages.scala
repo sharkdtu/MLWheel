@@ -7,8 +7,11 @@ import akka.actor.ActorRef
  */
 private[mlwheel] object RegisterMessages {
 
-  case class RegisterClient(client: ActorRef)
+  case class RegisterClientRequest(client: ActorRef) extends Request
 
-  case class RegisterWorker(worker: ActorRef)
+  case class RegisterWorkerRequest(worker: ActorRef) extends Request
 
+  case class RegisterClientResponse(clientId: String) extends Response
+
+  case class RegisterWorkerResponse(workerId: String) extends Response
 }
