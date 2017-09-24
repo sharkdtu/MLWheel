@@ -11,7 +11,7 @@ private[mlwheel] object RegisterMessages {
 
   case class RegisterWorkerRequest(worker: ActorRef) extends Request
 
-  case class RegisterClientResponse(clientId: String) extends Response
+  case class RegisterClientResponse(isSuccess: Boolean, errorMsg: String) extends Response
 
-  case class RegisterWorkerResponse(workerId: String) extends Response
+  case class RegisterWorkerResponse(isSuccess: Boolean, errorMsg: String) extends Response
 }

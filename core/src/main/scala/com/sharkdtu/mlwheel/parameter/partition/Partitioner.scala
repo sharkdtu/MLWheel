@@ -10,6 +10,13 @@ abstract class Partitioner(val numPartitions: Int) {
   def getPartitionId(elemIndex: Long): Int
 }
 
+object Partitioner {
+  object PartitionMode extends Enumeration {
+    type PartitionMode = Value
+    val RANGE, HASH = Value
+  }
+}
+
 /**
  * A range partitioner that partition elements range by range
  *
@@ -20,6 +27,7 @@ class RangePartitioner(numPartitions: Int, numElements: Long)
   extends Partitioner(numPartitions) {
 
   /**
+   * Example:
    * 19 elems and 4 partitions:
    *
    * xxxx   |   xxxx   |   xxxxx   |   xxxxx

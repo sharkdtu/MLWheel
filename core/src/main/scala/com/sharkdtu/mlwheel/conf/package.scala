@@ -62,10 +62,23 @@ package object conf {
       .stringConf
       .createWithDefault("com.sharkdtu.mlwheel.serializer.JavaSerializer")
 
-  private[mlwheel] val PS_CLIENT_CLEANER_INTERVAL =
-    ConfigBuilder("ps.client.cleaner.interval")
+  // ============================================ //
+  //                 Master settings              //
+  // ============================================ //
+  private[mlwheel] val PS_MASTER_CLIENT_CLEANER_INTERVAL =
+    ConfigBuilder("ps.master.client.cleaner.interval")
       .timeConf(TimeUnit.MILLISECONDS)
       .createWithDefaultString("3000ms")
+
+  private[mlwheel] val PS_MASTER_CLIENT_CAPACITY =
+    ConfigBuilder("ps.master.client.capacity")
+      .intConf
+      .createWithDefault(100)
+
+  private[mlwheel] val PS_MASTER_MESSAGE_PROCESSOR_POOL_SIZE =
+    ConfigBuilder("ps.master.message.processor.pool.size")
+      .intConf
+      .createWithDefault(2 * Runtime.getRuntime.availableProcessors())
 
   // ============================================ //
   //                  Akka settings               //

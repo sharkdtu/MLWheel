@@ -195,4 +195,27 @@ private[mlwheel] object AkkaUtils extends Logging {
    */
   def getHostPort(actor: ActorRef): String = actor.path.address.hostPort
 
+  /**
+   * Returns a String representation formatted as:
+   *
+   * `system@host:port`
+   */
+  def getHostPort(system: ActorSystem): String = {
+    system match {
+      case sys: ExtendedActorSystem =>
+        sys.provider.getDefaultAddress.hostPort
+
+      case _ => throw new UnsupportedOperationException("Not a ExtendedActorSystem")
+    }
+  }
+
+  def getUid(actor: ActorRef): String = {
+    val str = actor.toString()
+    val idx = str.indexOf("#")
+    if (idx == -1) {
+      throw new PSException(s"Error actor: $str")
+    }
+    str.substring(idx+1)
+  }
+
 }

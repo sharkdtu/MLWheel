@@ -6,7 +6,7 @@ import java.util.UUID
 import java.util.concurrent.atomic.AtomicLong
 
 import scala.collection.JavaConversions._
-import scala.util.control.NonFatal
+import scala.util.control.{ControlThrowable, NonFatal}
 
 import com.sharkdtu.mlwheel.Logging
 import com.sharkdtu.mlwheel.conf._
@@ -251,5 +251,37 @@ private[mlwheel] object Utils extends Logging {
    * Get an UUID
    */
   def getNextUUID: String = UUID.randomUUID().toString.replace("-", "")
+
+  /**
+   * Return a nice string representation of the exception. It will call "printStackTrace" to
+   * recursively generate the stack trace including the exception and its causes.
+   */
+  def getExceptionString(e: Throwable): String = {
+    if (e == null) {
+      ""
+    } else {
+      // Use e.printStackTrace here because e.getStackTrace doesn't include the cause
+      val stringWriter = new StringWriter()
+      e.printStackTrace(new PrintWriter(stringWriter))
+      stringWriter.toString
+    }
+  }
+
+  /**
+   * Execute the given block, logging and re-throwing any uncaught exception.
+   * This is particularly useful for wrapping code that runs in a thread, to ensure
+   * that exceptions are printed, and to avoid having to catch Throwable.
+   */
+  def logUncaughtExceptions[T](f: => T): T = {
+    try {
+      f
+    } catch {
+      case ct: ControlThrowable =>
+        throw ct
+      case t: Throwable =>
+        logError(s"Uncaught exception in thread ${Thread.currentThread().getName}", t)
+        throw t
+    }
+  }
 
 }

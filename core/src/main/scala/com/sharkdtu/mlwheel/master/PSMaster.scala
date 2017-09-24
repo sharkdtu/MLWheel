@@ -4,29 +4,18 @@ import akka.actor.{Actor, Props, Terminated}
 
 import com.sharkdtu.mlwheel.conf.{PSConf, _}
 import com.sharkdtu.mlwheel.message.RegisterMessages._
-import com.sharkdtu.mlwheel.message.WritingMessages.CreateVector
+import com.sharkdtu.mlwheel.message.Request
 import com.sharkdtu.mlwheel.{ActorLogReceive, Logging, PSContext}
 
 
-private class PSMasterActor(manager: PSVariableMetaManager)
+private class PSMasterActor(manager: PSVariableManager)
   extends Actor with ActorLogReceive with Logging {
 
-  /**
-   * The PSMasterReaderActor ref for processing ReadingMessages
-   */
-  private val reader = context.actorOf(Props(new PSMasterReaderActor(manager)))
-
-  /**
-   * The PSMasterReaderActor ref for processing WritingMessages
-   */
-  private val writer = context.actorOf(Props(new PSMasterWriterActor(manager)))
-
   override def receiveWithLogging: Receive = {
-
     case RegisterClientRequest(client) =>
-      manager.registerClient(client)
-      context.watch(client)
-      sender ! true
+      val resp = manager.registerClient(client)
+      if (resp.isSuccess) context.watch(client)
+      sender ! resp
 
     case RegisterWorkerRequest(worker) =>
       manager.registerWorker(worker)
@@ -36,30 +25,25 @@ private class PSMasterActor(manager: PSVariableMetaManager)
     case Terminated(actor) =>
       manager.remove(actor)
 
-    case msg: CreateVector =>
-      writer.forward(msg)
+    case otherMsg: Request =>
+      manager.process(otherMsg, sender)
   }
-
 }
 
 private[mlwheel] class PSMaster(conf: PSConf) extends Logging {
-  // Init PSContext.
+  // Init PSContext first.
   import com.sharkdtu.mlwheel.PSContext.Role._
   PSContext.create(conf, conf.get(PS_MASTER_HOST), MASTER)
 
   private def actorSystem = PSContext.get.actorSystem
 
+  private val metaManager = new PSVariableManager(conf)
+
   /**
-   * The PSMasterActor for monitor clients and workers
+   * The PSMasterActor for processing rpc messages
    */
-  private val master = actorSystem.actorOf(Props[PSMasterActor],
+  private val master = actorSystem.actorOf(Props(new PSMasterActor(metaManager)),
     name = PSContext.PSMasterActorNames.psMasterActorName)
 
 
-}
-
-object PSMaster {
-  def main(args: Array[String]): Unit = {
-
-  }
 }

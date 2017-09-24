@@ -1,17 +1,27 @@
 package com.sharkdtu.mlwheel.parameter
 
+import com.sharkdtu.mlwheel.client.PSClient
+import com.sharkdtu.mlwheel.parameter.partition.Partitioner.PartitionMode._
+
 /**
  * A PS Matrix whose data is located on parameter servers.
  * It can not be instantiated through `new PSMatrix`.
  *
- * @param id The unique id of the matrix
+ * @param id The unique id
+ * @param numPartitions The number of partitions
+ * @param partitionMode The partition mode
+ * @param numRows The number of rows
+ * @param numCols The number of cols
+ * @param client The client who create this matrix
  */
-class PSMatrix private(
+class PSMatrix private[mlwheel](
     id: String,
     numPartitions: Int,
+    partitionMode: PartitionMode,
     val numRows: Int,
-    val numCols: Int
-  ) extends PSVariable(id, numPartitions) {
+    val numCols: Int,
+    client: PSClient
+  ) extends PSVariable(id, numPartitions, partitionMode, client) {
 
   /**
    * Get the number of elements in this matrix.
@@ -35,17 +45,4 @@ class PSMatrix private(
    * @return The values of this matrix
    */
   override def getValues(partitionId: Int): Array[Double] = ???
-}
-
-/**
- * The factory of PSMatrix, it is invisible to users.
- * The only entrance for users is [[com.sharkdtu.mlwheel.client.PSClient]]
- */
-private[mlwheel] object PSMatrix {
-  def apply(
-      id: Int,
-      numPartitions: Int,
-      numRows: Int,
-      numCols: Int): PSMatrix =
-    new PSMatrix(id, numPartitions, numRows, numCols)
 }

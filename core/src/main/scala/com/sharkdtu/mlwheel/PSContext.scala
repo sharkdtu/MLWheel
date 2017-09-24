@@ -19,12 +19,8 @@ private[mlwheel] class PSContext private(
     val actorSystem: ActorSystem
   ) extends Logging {
 
-  def clean[F <: AnyRef](f: F, checkSerializable: Boolean = true): F = {
-    ClosureUtils.clean(f, checkSerializable)
-    f
-  }
-
   def stop(): Unit = {
+    import scala.concurrent.ExecutionContext.Implicits.global
     actorSystem.terminate().foreach { _ =>
       logInfo("Actor system was shut down.")
     }
@@ -39,6 +35,8 @@ private[mlwheel] object PSContext extends Logging {
   val psClientActorSystemName = "ps-client"
   val psMasterActorSystemName = "ps-master"
   val psWorkerActorSystemName = "ps-worker"
+
+  val PS_VARIABLE_FAKE_ID = "fake-id"
 
   object Role extends Enumeration {
     type Role = Value

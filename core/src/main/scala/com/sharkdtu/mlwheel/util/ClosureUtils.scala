@@ -89,7 +89,7 @@ private[mlwheel] object ClosureUtils extends Logging {
     }
   }
 
-  def clean(func: AnyRef, checkSerializable: Boolean = true) {
+  def clean(func: AnyRef, checkSerializable: Boolean = true): Unit = {
     val outerClasses = getOuterClasses(func)
     val innerClasses = getInnerClasses(func)
     val outerObjects = getOuterObjects(func)

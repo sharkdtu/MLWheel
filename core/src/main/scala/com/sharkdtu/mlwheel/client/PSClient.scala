@@ -4,12 +4,14 @@ import scala.util.Random
 
 import akka.actor.{Actor, Props}
 
-import com.sharkdtu.mlwheel.{ActorLogReceive, Logging, PSContext}
 import com.sharkdtu.mlwheel.conf.{PSConf, _}
-import com.sharkdtu.mlwheel.message.WritingMessages.CreateVector
-import com.sharkdtu.mlwheel.message.RegisterMessages.RegisterClient
+import com.sharkdtu.mlwheel.exception.PSException
+import com.sharkdtu.mlwheel.message.RegisterMessages.{RegisterClientRequest, RegisterClientResponse}
+import com.sharkdtu.mlwheel.message.WritingMessages.{CreateVectorRequest, CreateVectorResponse}
+import com.sharkdtu.mlwheel.parameter.partition.Partitioner.PartitionMode._
 import com.sharkdtu.mlwheel.parameter.{PSMatrix, PSVector}
-import com.sharkdtu.mlwheel.util.{AkkaUtils, Utils}
+import com.sharkdtu.mlwheel.util.{AkkaUtils, ClosureUtils, Utils}
+import com.sharkdtu.mlwheel.{ActorLogReceive, Logging, PSContext}
 
 /**
  * The entrance interface for users.
@@ -34,22 +36,29 @@ class PSClient(conf: PSConf) extends Logging {
         .set(PS_MASTER_PORT, masterPort)
     )
 
-  // Init PSContext.
+  // Init PSContext first.
   import com.sharkdtu.mlwheel.PSContext.Role._
   PSContext.create(conf, Utils.localHostname, CLIENT)
 
-  // The PSMasterActor reference for sending RPC messages
+  // The PSMasterActor reference for sending RPC messages.
   private val master = AkkaUtils.makePSMasterRef(
     PSContext.PSMasterActorNames.psMasterActorName, conf, actorSystem)
 
-  // The PSClientActor reference as unique id of this PSClient
+  // The PSClientActor reference as unique id of this PSClient.
   private val client = actorSystem.actorOf(Props[PSClientActor])
 
-  // Register to master
-  private val registered = AkkaUtils.askWithRetry[Boolean](
-    master, RegisterClient(client), conf)
+  // The unique id of this client.
+  private val id = s"${AkkaUtils.getHostPort(actorSystem)}#${AkkaUtils.getUid(client)}"
 
-  assert(registered, "Failed to register.")
+  // Register to master
+  private val registerResponse = AkkaUtils.askWithRetry[RegisterClientResponse](
+    master, RegisterClientRequest(client), conf)
+
+  if (!registerResponse.isSuccess) {
+    throw new PSException(s"Register failed: ${registerResponse.errorMsg}")
+  }
+
+  logInfo("Register to master successfully.")
 
   private def actorSystem = PSContext.get.actorSystem
 
@@ -61,17 +70,24 @@ class PSClient(conf: PSConf) extends Logging {
    *
    * @param numDimensions The number of vector's dimensions
    * @param numPartitions The number of partitions, default 0 means auto split
+   * @param partitionMode The partition mode: `RANGE` or `HASH`
    * @return The zero [[PSVector]] instance
    */
-  def zeroVector(numDimensions: Int, numPartitions: Int = 0): PSVector = {
-    createVector(numDimensions, numPartitions, () => 0.0)
+  def zeroVector(
+      numDimensions: Int,
+      numPartitions: Int = 0,
+      partitionMode: PartitionMode = RANGE): PSVector = {
+    createVector(numDimensions, numPartitions, partitionMode, () => 0.0)
   }
 
   /**
    * Create a random [[PSVector]], the random distribution is uniform.
    *
+   * @param numDimensions The number of vector's dimensions
    * @param min The minimum of uniform distribution
    * @param max The maximum of uniform distribution
+   * @param numPartitions The number of partitions, default 0 means auto split
+   * @param partitionMode The partition mode: `RANGE` or `HASH`
    * @return The random uniform [[PSVector]]
    */
   def randomUniformVector(
@@ -79,20 +95,24 @@ class PSClient(conf: PSConf) extends Logging {
       min: Double,
       max: Double,
       numPartitions: Int = 0,
+      partitionMode: PartitionMode = RANGE,
       seed: Long = System.currentTimeMillis()): PSVector = {
     val rand = new Random(seed)
     def genFunc(): Double = {
       (max - min) * rand.nextDouble() + min
     }
 
-    createVector(numDimensions, numPartitions, genFunc)
+    createVector(numDimensions, numPartitions, partitionMode, genFunc)
   }
 
   /**
    * Create a random [[PSVector]], the random distribution is normal.
    *
+   * @param numDimensions The number of vector's dimensions
    * @param mean The mean parameter of uniform distribution
    * @param stddev The stddev parameter of uniform distribution
+   * @param numPartitions The number of partitions, default 0 means auto split
+   * @param partitionMode The partition mode: `RANGE` or `HASH`
    * @return The random normal [[PSVector]]
    */
   def randomNormalVector(
@@ -100,26 +120,31 @@ class PSClient(conf: PSConf) extends Logging {
       mean: Double,
       stddev: Double,
       numPartitions: Int = 0,
+      partitionMode: PartitionMode = RANGE,
       seed: Long = System.currentTimeMillis()): PSVector = {
     val rand = new Random(seed)
     def genFunc(): Double = {
       stddev * rand.nextGaussian() + mean
     }
 
-    createVector(numDimensions, numPartitions, genFunc)
+    createVector(numDimensions, numPartitions, partitionMode, genFunc)
   }
 
   private def createVector(
       numDimensions: Int,
       numPartitions: Int,
+      partitionMode: PartitionMode,
       genFunc: () => Double): PSVector = {
     val actualNumPartitions = Utils.getActualNumPartitions(
       numDimensions, numPartitions, conf)
-    val cleanedFunc = PSContext.get.clean(genFunc)
-    val id = AkkaUtils.askWithRetry[Int](
-      master, CreateVector(numDimensions, actualNumPartitions, cleanedFunc), conf)
-    logInfo(s"Successfully create ps vector($id)")
-    PSVector(id, actualNumPartitions, numDimensions)
+    val cleanedFunc = clean(genFunc)
+    val resp = AkkaUtils.askWithRetry[CreateVectorResponse](master, CreateVectorRequest(id,
+      numDimensions, actualNumPartitions, partitionMode.id, cleanedFunc), conf)
+    if (resp.psVectorId == PSContext.PS_VARIABLE_FAKE_ID) {
+      throw new PSException(s"Create ps vector failed: ${resp.errorMsg}")
+    }
+    logInfo(s"Successfully create ps vector(${resp.psVectorId})")
+    new PSVector(resp.psVectorId, actualNumPartitions, partitionMode, numDimensions, this)
   }
 
   // =============================== //
@@ -132,7 +157,22 @@ class PSClient(conf: PSConf) extends Logging {
    * @param numCols The number of columns
    * @return The zero [[PSMatrix]] instance
    */
-  def zeroMatrix(numRows: Int, numCols: Int): PSMatrix = _  // TODO
+  def zeroMatrix(numRows: Int, numCols: Int): PSMatrix = null  // TODO
+
+  /**
+   * Clean a closure to make it ready to serialized and send to master/worker
+   * (removes unreferenced variables in $outer's, updates REPL variables)
+   * If `checkSerializable` is set, `clean` will also proactively
+   * check to see if `f` is serializable and throw a `PSException` if not.
+   *
+   * @param f The closure to clean
+   * @param checkSerializable Whether or not to immediately check `f` for serializability
+   * @throws `PSException` if `checkSerializable` is set but `f` is not serializable
+   */
+  private def clean[F <: AnyRef](f: F, checkSerializable: Boolean = true): F = {
+    ClosureUtils.clean(f, checkSerializable)
+    f
+  }
 
 }
 
@@ -205,6 +245,6 @@ object PSClient {
 
 private class PSClientActor extends Actor with ActorLogReceive with Logging {
   override def receiveWithLogging: Receive = {
-    case msg => logInfo(s"PSClient actor received message: $msg")
+    case msg => logInfo(s"PSClient($self) received message: $msg")
   }
 }

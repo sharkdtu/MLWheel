@@ -5,6 +5,15 @@ package com.sharkdtu.mlwheel.message
  */
 private[mlwheel] object WritingMessages {
 
-  case class CreateVector(numDimensions: Int, numPartitions: Int, genFunc: () => Double)
+  case class CreateVectorRequest(
+      clientId: String,
+      numDimensions: Int,
+      numPartitions: Int,
+      partitionMode: Int, // 0 is Range, 1 is Hash.
+      genFunc: () => Double) extends Request
+
+  case class CreateVectorResponse(
+      psVectorId: String,
+      errorMsg: String) extends Response
 
 }

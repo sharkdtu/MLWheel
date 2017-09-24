@@ -1,18 +1,29 @@
 package com.sharkdtu.mlwheel.parameter
 
+import com.sharkdtu.mlwheel.client.PSClient
+import com.sharkdtu.mlwheel.parameter.partition.Partitioner.PartitionMode._
+
 /**
- * A PS PSVector whose data is located on parameter servers.
+ * A PS Vector whose data is located on parameter servers.
  * It can not be instantiated through `new PSVector`.
  *
- * @param id The unique id of the vector
+ * @param id The unique id
+ * @param numPartitions The number of partitions
+ * @param partitionMode The partition mode
+ * @param numDimensions The number of dimensions
+ * @param client The client who create this vector
  */
-class PSVector private(
+class PSVector private[mlwheel](
     id: String,
     numPartitions: Int,
-    val numDimensions: Int
-  ) extends PSVariable(id, numPartitions) {
+    partitionMode: PartitionMode,
+    val numDimensions: Int,
+    client: PSClient
+  ) extends PSVariable(id, numPartitions, partitionMode, client) {
 
-  /**
+import com.sharkdtu.mlwheel.client.PSClient
+
+/**
    * Get the number of elements in this vector.
    *
    * @return The number of elements in this vector
@@ -35,16 +46,4 @@ class PSVector private(
    */
   override def getValues(partitionId: Int): Array[Double] = ???
 
-}
-
-/**
- * The factory of PSVector, it is invisible to users.
- * The only entrance for users is [[com.sharkdtu.mlwheel.client.PSClient]]
- */
-private[mlwheel] object PSVector {
-  def apply(
-      id: Int,
-      numPartitions: Int,
-      numDimensions: Int): PSVector =
-    new PSVector(id, numPartitions, numDimensions)
 }

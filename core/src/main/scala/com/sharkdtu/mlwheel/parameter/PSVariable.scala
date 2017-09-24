@@ -1,25 +1,35 @@
 package com.sharkdtu.mlwheel.parameter
 
+import java.util.concurrent.locks.ReentrantReadWriteLock
+
 import com.sharkdtu.mlwheel.Logging
+import com.sharkdtu.mlwheel.client.PSClient
 import com.sharkdtu.mlwheel.parameter.partition._
+import com.sharkdtu.mlwheel.parameter.partition.Partitioner.PartitionMode._
 
 /**
- * A Variable reference represent a variable on ps.
+ * A Variable reference represent a variable(vector or matrix) on ps.
  *
  * @param id The unique id of the variable
+ * @param numPartitions The number of partitions
+ * @param partitionMode The partition mode of this variable
+ * @param client The client who create this variable
  */
-abstract class PSVariable(val id: String, val numPartitions: Int)
-  extends Serializable with Logging {
+abstract class PSVariable(
+    val id: String,
+    val numPartitions: Int,
+    partitionMode: PartitionMode,
+    client: PSClient) extends Logging {
 
   /**
    * A Optional name of this PSVariable
    */
-  @transient private var _name: String = _
+  private var _name: String = _
 
   /**
-   * Specify how this PSVariable is partitioned.
+   * The read/write lock for this variable
    */
-  @transient private var _partitioner: Partitioner = _
+  private val lock = new ReentrantReadWriteLock()
 
   /** Assign a name to this Variable */
   def setName(name: String): this.type = {
@@ -30,18 +40,16 @@ abstract class PSVariable(val id: String, val numPartitions: Int)
   def name: String = _name
 
   /**
-   * Assign a partitioner to this Variable.
-   *
-   * @param partitioner The partitioner
-   * @note It's not thread-safety
+   * Return the partitioner of this variable, or `RangePartitioner` if not set
    */
-  def setPartitioner(partitioner: Partitioner): this.type = {
-    require(partitioner != null, "partitioner is null")
-    _partitioner = partitioner
-    this
+  def partitioner: Partitioner = {
+    partitionMode match {
+      case RANGE =>
+        new RangePartitioner(numPartitions, numElements)
+      case HASH =>
+        throw new UnsupportedOperationException(s"Unsupport hash partitioner temporarily.")
+    }
   }
-
-  def partitioner: Partitioner = _partitioner
 
   /**
    * Get the number of elements in this variable.
@@ -55,18 +63,7 @@ abstract class PSVariable(val id: String, val numPartitions: Int)
    *
    * @return All partitions
    */
-  final def getPartitions: Array[Partition] = {
-    if (partitioner == null) {
-      // Set RangePartitioner to default partitioner
-      setPartitioner(new RangePartitioner(numPartitions, numElements))
-    }
-    partitioner.partitions
-  }
-
-  /**
-   * Returns the number of partitions of this variable.
-   */
-  final def getNumPartitions: Int = getPartitions.length
+  final def getPartitions: Array[Partition] = partitioner.partitions
 
   /**
    * Get the values of this variable from ps.
