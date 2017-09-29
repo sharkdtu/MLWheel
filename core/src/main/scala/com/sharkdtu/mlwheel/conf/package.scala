@@ -60,7 +60,17 @@ package object conf {
   private[mlwheel] val PS_SERIALIZER =
     ConfigBuilder("ps.serializer")
       .stringConf
-      .createWithDefault("com.sharkdtu.mlwheel.serializer.JavaSerializer")
+      .createWithDefault("java")
+
+  private[mlwheel] val PS_IO_COMPRESSION_CODEC =
+    ConfigBuilder("ps.io.compression.codec")
+      .stringConf
+      .createWithDefault("lz4")
+
+  private[mlwheel] val PS_IO_COMPRESSION_BLOCKSIZE =
+    ConfigBuilder("ps.io.compression.blockSize")
+      .byteConf(ByteUnit.BYTE)
+      .createWithDefaultString("32KB")
 
   // ============================================ //
   //                 Master settings              //
@@ -72,6 +82,11 @@ package object conf {
 
   private[mlwheel] val PS_MASTER_CLIENT_CAPACITY =
     ConfigBuilder("ps.master.client.capacity")
+      .intConf
+      .createWithDefault(100)
+
+  private[mlwheel] val PS_MASTER_WORKER_CAPACITY =
+    ConfigBuilder("ps.master.worker.capacity")
       .intConf
       .createWithDefault(100)
 

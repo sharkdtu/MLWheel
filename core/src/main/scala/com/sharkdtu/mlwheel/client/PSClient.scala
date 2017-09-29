@@ -6,9 +6,9 @@ import akka.actor.{Actor, Props}
 
 import com.sharkdtu.mlwheel.conf.{PSConf, _}
 import com.sharkdtu.mlwheel.exception.PSException
-import com.sharkdtu.mlwheel.message.RegisterMessages.{RegisterClientRequest, RegisterClientResponse}
+import com.sharkdtu.mlwheel.message.RegisterMessages.{RegisterClientFailed, RegisterClientRequest, RegisterClientResponse, RegisteredClient}
 import com.sharkdtu.mlwheel.message.WritingMessages.{CreateVectorRequest, CreateVectorResponse}
-import com.sharkdtu.mlwheel.parameter.partition.Partitioner.PartitionMode._
+import com.sharkdtu.mlwheel.parameter.partition.Partitioner._
 import com.sharkdtu.mlwheel.parameter.{PSMatrix, PSVector}
 import com.sharkdtu.mlwheel.util.{AkkaUtils, ClosureUtils, Utils}
 import com.sharkdtu.mlwheel.{ActorLogReceive, Logging, PSContext}
@@ -54,11 +54,12 @@ class PSClient(conf: PSConf) extends Logging {
   private val registerResponse = AkkaUtils.askWithRetry[RegisterClientResponse](
     master, RegisterClientRequest(client), conf)
 
-  if (!registerResponse.isSuccess) {
-    throw new PSException(s"Register failed: ${registerResponse.errorMsg}")
+  registerResponse match {
+    case RegisterClientFailed(errorMsg) =>
+      throw new PSException(s"Register failed: $errorMsg")
+    case RegisteredClient =>
+      logInfo("Register to master successfully.")
   }
-
-  logInfo("Register to master successfully.")
 
   private def actorSystem = PSContext.get.actorSystem
 
@@ -76,7 +77,7 @@ class PSClient(conf: PSConf) extends Logging {
   def zeroVector(
       numDimensions: Int,
       numPartitions: Int = 0,
-      partitionMode: PartitionMode = RANGE): PSVector = {
+      partitionMode: Byte = RANGE): PSVector = {
     createVector(numDimensions, numPartitions, partitionMode, () => 0.0)
   }
 
@@ -95,10 +96,10 @@ class PSClient(conf: PSConf) extends Logging {
       min: Double,
       max: Double,
       numPartitions: Int = 0,
-      partitionMode: PartitionMode = RANGE,
+      partitionMode: Byte = RANGE,
       seed: Long = System.currentTimeMillis()): PSVector = {
-    val rand = new Random(seed)
     def genFunc(): Double = {
+      val rand = new Random(seed)
       (max - min) * rand.nextDouble() + min
     }
 
@@ -120,10 +121,10 @@ class PSClient(conf: PSConf) extends Logging {
       mean: Double,
       stddev: Double,
       numPartitions: Int = 0,
-      partitionMode: PartitionMode = RANGE,
+      partitionMode: Byte = RANGE,
       seed: Long = System.currentTimeMillis()): PSVector = {
-    val rand = new Random(seed)
     def genFunc(): Double = {
+      val rand = new Random(seed)
       stddev * rand.nextGaussian() + mean
     }
 
@@ -133,13 +134,13 @@ class PSClient(conf: PSConf) extends Logging {
   private def createVector(
       numDimensions: Int,
       numPartitions: Int,
-      partitionMode: PartitionMode,
+      partitionMode: Byte,
       genFunc: () => Double): PSVector = {
     val actualNumPartitions = Utils.getActualNumPartitions(
       numDimensions, numPartitions, conf)
     val cleanedFunc = clean(genFunc)
     val resp = AkkaUtils.askWithRetry[CreateVectorResponse](master, CreateVectorRequest(id,
-      numDimensions, actualNumPartitions, partitionMode.id, cleanedFunc), conf)
+      numDimensions, actualNumPartitions, partitionMode, cleanedFunc), conf)
     if (resp.psVectorId == PSContext.PS_VARIABLE_FAKE_ID) {
       throw new PSException(s"Create ps vector failed: ${resp.errorMsg}")
     }

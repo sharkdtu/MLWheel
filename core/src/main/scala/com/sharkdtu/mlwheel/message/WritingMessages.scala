@@ -9,11 +9,11 @@ private[mlwheel] object WritingMessages {
       clientId: String,
       numDimensions: Int,
       numPartitions: Int,
-      partitionMode: Int, // 0 is Range, 1 is Hash.
-      genFunc: () => Double) extends Request
+      partitionMode: Byte, // 0: Range, 1: Hash.
+      genFunc: () => Double) extends RpcRequest
 
   case class CreateVectorResponse(
       psVectorId: String,
-      errorMsg: String) extends Response
+      errorMsg: String) extends RpcResponse
 
 }

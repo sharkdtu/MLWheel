@@ -1,42 +1,31 @@
 package com.sharkdtu.mlwheel.parameter
 
 import com.sharkdtu.mlwheel.client.PSClient
-import com.sharkdtu.mlwheel.parameter.partition.Partitioner.PartitionMode._
+import com.sharkdtu.mlwheel.parameter.partition.Partition
 
 /**
  * A PS Vector whose data is located on parameter servers.
- * It can not be instantiated through `new PSVector`.
+ * It can only be created through [[PSClient]].
  *
  * @param id The unique id
- * @param numPartitions The number of partitions
- * @param partitionMode The partition mode
- * @param numDimensions The number of dimensions
- * @param client The client who create this vector
+ * @param partitions The partitions
  */
 class PSVector private[mlwheel](
     id: String,
-    numPartitions: Int,
-    partitionMode: PartitionMode,
-    val numDimensions: Int,
-    client: PSClient
-  ) extends PSVariable(id, numPartitions, partitionMode, client) {
+    partitions: Array[Partition],
+    val numDimensions: Int
+  ) extends PSVariable(id, partitions) {
 
-import com.sharkdtu.mlwheel.client.PSClient
-
-/**
-   * Get the number of elements in this vector.
-   *
-   * @return The number of elements in this vector
-   */
-  override def numElements: Long = numDimensions.toLong
+  require(numDimensions.toLong == numElements,
+    "The sum of all the partitions is not equal numDimensions.")
 
   /**
-   * Get all the values of this vector from ps
+   * Get iterator of this vector values.
    *
    * @return The values of this vector
    * @note This operation is expensive
    */
-  override def getValues: Array[Double] = ???
+  override def iterator: Iterator[Double] = ???
 
   /**
    * Get the specified partition values of this vector from ps
@@ -44,6 +33,5 @@ import com.sharkdtu.mlwheel.client.PSClient
    * @param partitionId The partition index
    * @return The values of this vector
    */
-  override def getValues(partitionId: Int): Array[Double] = ???
-
+  override def get(partitionId: Int): Array[Double] = ???
 }

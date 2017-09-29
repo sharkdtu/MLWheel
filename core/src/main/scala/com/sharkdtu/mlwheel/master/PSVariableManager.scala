@@ -1,6 +1,7 @@
 package com.sharkdtu.mlwheel.master
 
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 
 import scala.collection.mutable
 
@@ -8,10 +9,11 @@ import akka.actor.ActorRef
 
 import com.sharkdtu.mlwheel.{Logging, PSContext}
 import com.sharkdtu.mlwheel.conf.{PSConf, _}
-import com.sharkdtu.mlwheel.message.RegisterMessages.RegisterClientResponse
-import com.sharkdtu.mlwheel.message.Request
-import com.sharkdtu.mlwheel.message.WritingMessages.{CreateVectorRequest, CreateVectorResponse}
-import com.sharkdtu.mlwheel.util.{Utils, AkkaUtils, ThreadUtils}
+import com.sharkdtu.mlwheel.message.RegisterMessages._
+import com.sharkdtu.mlwheel.message.RpcRequest
+import com.sharkdtu.mlwheel.message.WritingMessages._
+import com.sharkdtu.mlwheel.parameter.PSVariable
+import com.sharkdtu.mlwheel.util.{AkkaUtils, ThreadUtils, Utils}
 
 /**
  * Center PSVariable manager.
@@ -19,17 +21,19 @@ import com.sharkdtu.mlwheel.util.{Utils, AkkaUtils, ThreadUtils}
 private[mlwheel] class PSVariableManager(conf: PSConf)
   extends Logging {
 
+  private val nextWorkerId = new AtomicInteger(0)
+
   // Collection of client actor refs available
   private val clients = mutable.HashSet.empty[ActorRef]
 
-  // Collection of worker actor refs available
-  private val workers = mutable.HashSet.empty[ActorRef]
+  // worker -> workerId
+  private val workers = mutable.HashMap.empty[ActorRef, Int]
 
-  // PSVariable id -> PSVariableMeta
-  type PSVariableMetaMap = mutable.HashMap[Int, PSVariableMeta]
+  // PSVariableId -> PSVariable
+  type PSVariableMap = mutable.HashMap[String, PSVariable]
 
-  // PSClient id -> all ps variables
-  private val psVariables = mutable.HashMap.empty[String, PSVariableMetaMap]
+  // All ps variables, clientId -> PSVariableMap
+  private val psVariables = mutable.HashMap.empty[String, PSVariableMap]
 
   private val msgProcessor = ThreadUtils.newDaemonCachedThreadPool("msg-processor",
     conf.get(PS_MASTER_MESSAGE_PROCESSOR_POOL_SIZE))
@@ -50,15 +54,18 @@ private[mlwheel] class PSVariableManager(conf: PSConf)
   def registerClient(client: ActorRef): RegisterClientResponse = {
     logInfo(s"Registering client: $client")
     val maxClients = conf.get(PS_MASTER_CLIENT_CAPACITY)
-    if (clients.size < maxClients) {
+    if (clients.size == maxClients) {
       // Exceed maximum clients, register failed!
-      RegisterClientResponse(false, s"Already have $maxClients clients.")
+      RegisterClientFailed(s"Already have $maxClients clients.")
     } else {
       clients += client
-      RegisterClientResponse(true, "")
+      RegisteredClient
     }
   }
 
+  /**
+   * Get the unique id of client.
+   */
   private def getClientId(client: ActorRef): String = {
     s"${AkkaUtils.getHostPort(client)}#${AkkaUtils.getUid(client)}"
   }
@@ -68,9 +75,18 @@ private[mlwheel] class PSVariableManager(conf: PSConf)
    *
    * @param worker The worker actor ref
    */
-  def registerWorker(worker: ActorRef): Unit = {
+  def registerWorker(worker: ActorRef): RegisterWorkerResponse = {
     logInfo(s"Registering worker: $worker")
-    workers += worker
+    val maxWorkers = conf.get(PS_MASTER_WORKER_CAPACITY)
+    if (workers.contains(worker)) {
+      RegisterWorkerFailed("Worker has been registered.")
+    } else if(workers.size == maxWorkers) {
+      RegisterWorkerFailed(s"Already have $maxWorkers workers.")
+    } else {
+      val workerId = nextWorkerId.getAndIncrement()
+      workers.put(worker, workerId)
+      RegisteredWorker(workerId)
+    }
   }
 
   /**
@@ -106,6 +122,7 @@ private[mlwheel] class PSVariableManager(conf: PSConf)
    */
   private def removeWorker(worker: ActorRef): Unit = {
     logInfo(s"Removing worker: $worker")
+    // TODO deliver its data to other worker
     workers -= worker
   }
 
@@ -115,7 +132,7 @@ private[mlwheel] class PSVariableManager(conf: PSConf)
    * @param msg The message to be processed
    * @param sender The message sender
    */
-  def process(msg: Request, sender: ActorRef): Unit = {
+  def process(msg: RpcRequest, sender: ActorRef): Unit = {
     msg match {
       case CreateVectorRequest(clientId, numDims, numParts, partMode, genFunc) =>
         msgProcessor.execute(new Runnable {
@@ -137,12 +154,3 @@ private[mlwheel] class PSVariableManager(conf: PSConf)
   }
 
 }
-
-private[mlwheel] case class PSVariableMeta(
-    variableId: Int,
-    partitions: Array[PartitionMeta]) {
-  def numPartitions: Int = partitions.length
-}
-
-// TODO: Multi copies for each partition
-private[mlwheel] case class PartitionMeta(partitionId: Int, worker: ActorRef)

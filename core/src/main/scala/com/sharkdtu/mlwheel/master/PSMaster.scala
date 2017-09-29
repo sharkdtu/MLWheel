@@ -4,7 +4,7 @@ import akka.actor.{Actor, Props, Terminated}
 
 import com.sharkdtu.mlwheel.conf.{PSConf, _}
 import com.sharkdtu.mlwheel.message.RegisterMessages._
-import com.sharkdtu.mlwheel.message.Request
+import com.sharkdtu.mlwheel.message.RpcRequest
 import com.sharkdtu.mlwheel.{ActorLogReceive, Logging, PSContext}
 
 
@@ -14,18 +14,22 @@ private class PSMasterActor(manager: PSVariableManager)
   override def receiveWithLogging: Receive = {
     case RegisterClientRequest(client) =>
       val resp = manager.registerClient(client)
-      if (resp.isSuccess) context.watch(client)
+      resp match {
+        case RegisteredClient => context.watch(client)
+      }
       sender ! resp
 
     case RegisterWorkerRequest(worker) =>
-      manager.registerWorker(worker)
-      context.watch(worker)
-      sender ! true
+      val resp = manager.registerWorker(worker)
+      resp match {
+        case RegisteredWorker(_) => context.watch(worker)
+      }
+      sender ! resp
 
     case Terminated(actor) =>
       manager.remove(actor)
 
-    case otherMsg: Request =>
+    case otherMsg: RpcRequest =>
       manager.process(otherMsg, sender)
   }
 }
@@ -37,12 +41,12 @@ private[mlwheel] class PSMaster(conf: PSConf) extends Logging {
 
   private def actorSystem = PSContext.get.actorSystem
 
-  private val metaManager = new PSVariableManager(conf)
+  private val psVariableManager = new PSVariableManager(conf)
 
   /**
    * The PSMasterActor for processing rpc messages
    */
-  private val master = actorSystem.actorOf(Props(new PSMasterActor(metaManager)),
+  private val master = actorSystem.actorOf(Props(new PSMasterActor(psVariableManager)),
     name = PSContext.PSMasterActorNames.psMasterActorName)
 
 

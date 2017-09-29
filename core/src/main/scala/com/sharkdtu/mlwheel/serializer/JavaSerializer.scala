@@ -95,6 +95,9 @@ private[mlwheel] class JavaSerializerInstance(
  * A serializer that uses Java's built-in serialization.
  */
 class JavaSerializer(conf: PSConf) extends Serializer with Externalizable {
+
+  protected def this() = this(new PSConf())  // For deserialization only
+
   private var resetCnt = conf.get(SERIALIZER_OBJECT_STREAM_RESET_COUNT)
   private var extraDebugInfoEnabled = conf.get(SERIALIZER_EXTRA_DEBUG_INFO_ENABLED)
 

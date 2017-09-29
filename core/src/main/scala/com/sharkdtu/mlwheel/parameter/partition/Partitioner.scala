@@ -11,10 +11,8 @@ abstract class Partitioner(val numPartitions: Int) {
 }
 
 object Partitioner {
-  object PartitionMode extends Enumeration {
-    type PartitionMode = Value
-    val RANGE, HASH = Value
-  }
+  val RANGE: Byte = 0
+  val HASH: Byte = 1
 }
 
 /**

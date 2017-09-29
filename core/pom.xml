@@ -54,6 +54,11 @@
       <artifactId>guava</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>net.jpountz.lz4</groupId>
+      <artifactId>lz4</artifactId>
+    </dependency>
+
     <!-- breeze dependencies-->
     <dependency>
       <groupId>org.scalanlp</groupId>

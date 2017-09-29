@@ -1,3 +1,4 @@
 package com.sharkdtu.mlwheel.message
 
-trait Response
+
+trait RpcRequest

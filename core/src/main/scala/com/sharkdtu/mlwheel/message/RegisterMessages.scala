@@ -7,11 +7,26 @@ import akka.actor.ActorRef
  */
 private[mlwheel] object RegisterMessages {
 
-  case class RegisterClientRequest(client: ActorRef) extends Request
+  // =============================== //
+  //     Client Register Messages    //
+  // =============================== //
+  case class RegisterClientRequest(client: ActorRef) extends RpcRequest
 
-  case class RegisterWorkerRequest(worker: ActorRef) extends Request
+  sealed class RegisterClientResponse extends RpcResponse
 
-  case class RegisterClientResponse(isSuccess: Boolean, errorMsg: String) extends Response
+  case object RegisteredClient extends RegisterClientResponse
 
-  case class RegisterWorkerResponse(isSuccess: Boolean, errorMsg: String) extends Response
+  case class RegisterClientFailed(errorMsg: String) extends RegisterClientResponse
+
+
+  // =============================== //
+  //     Worker Register Messages    //
+  // =============================== //
+  case class RegisterWorkerRequest(worker: ActorRef) extends RpcRequest
+
+  sealed class RegisterWorkerResponse extends RpcResponse
+
+  case class RegisteredWorker(id: Int) extends RegisterWorkerResponse
+
+  case class RegisterWorkerFailed(errorMsg: String) extends RegisterWorkerResponse
 }
